@@ -1,0 +1,24 @@
+# Qui dentro non entrano segreti, e questa e' la prima barriera.
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.p12
+*.pfx
+*.kdbx
+authorized_keys
+known_hosts
+.env
+.env.*
+*credential*
+*password*
+*secret*
+.netrc
+*.sqlite
+*.db
+# roba di macchina, non di metodo
+TODO.md
+*.bak-*
+*.log

@@ -1,0 +1,28 @@
+#!/bin/bash
+# Blocca il commit se nei file in stage compare qualcosa che somiglia a un segreto.
+# Si installa con:  git config core.hooksPath .githooks   ( lo fa install.sh )
+MOTIVI=""
+FILES=$( git diff --cached --name-only --diff-filter=ACM )
+[ -z "$FILES" ] && exit 0
+
+for f in $FILES; do
+  case "$f" in
+    *.pem|*.key|id_rsa*|id_ed25519*|*authorized_keys*|.env|.env.*|.netrc)
+      MOTIVI="$MOTIVI\n  $f: il nome stesso del file dice che e' un segreto" ;;
+  esac
+  git show ":$f" 2>/dev/null | grep -qE -- "-----BEGIN [A-Z ]*PRIVATE KEY-----" \
+    && MOTIVI="$MOTIVI\n  $f: contiene una chiave privata"
+  git show ":$f" 2>/dev/null | grep -qiE "(password|passwd|secret|api.?key|access.?token)[\"' ]*[:=][\"' ]*[^ \"'#]{8,}" \
+    && MOTIVI="$MOTIVI\n  $f: contiene qualcosa che sembra una credenziale assegnata a una variabile"
+  git show ":$f" 2>/dev/null | grep -qE "ssh-(rsa|ed25519|dss) AAAA" \
+    && MOTIVI="$MOTIVI\n  $f: contiene una chiave pubblica SSH ( dice chi entra dove )"
+done
+
+if [ -n "$MOTIVI" ]; then
+  echo "COMMIT BLOCCATO: questo repository si diffonde su piu' macchine, i segreti non ci entrano."
+  printf "$MOTIVI\n"
+  echo
+  echo "Se e' un falso positivo:  git commit --no-verify"
+  exit 1
+fi
+exit 0
