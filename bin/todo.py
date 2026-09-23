@@ -149,4 +149,5 @@ def main():
 
     print( '\n-- %d voci in %s' % ( len( sel ), percorso ), file = sys.stderr )
 
-main()
+if __name__ == "__main__":
+    main()

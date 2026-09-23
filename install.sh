@@ -8,6 +8,7 @@ set -u
 CD=$( cd "$( dirname "$0" )" && pwd )
 DEST="$HOME/.claude"
 DATA=$( date +%Y%m%d )
+BAK="$DEST/backups/$DATA-thelinuxnerd"
 DRY=${1:-}
 n=0
 
@@ -24,8 +25,12 @@ metti() {
     return
   fi
   if [ -f "$destinazione" ]; then
-    echo "  ~ $destinazione ( il precedente va in .bak-$DATA )"
-    fai "cp -a '$destinazione' '$destinazione.bak-$DATA'"
+    # La data va nel nome della cartella, non dopo l'estensione: "todo.py.bak-20260923" non e'
+    # piu' un .py, e "x.conf.bak-..." sfugge a ogni glob "*.conf" ( o ci finisce dentro ).
+    local copia="$BAK/${destinazione#$DEST/}"
+    echo "  ~ $destinazione ( il precedente va in $copia )"
+    fai "mkdir -p '$( dirname "$copia" )'"
+    fai "cp -a '$destinazione' '$copia'"
   else
     echo "  + $destinazione"
   fi
