@@ -30,7 +30,8 @@ metti() {
     local copia="$BAK/${destinazione#$DEST/}"
     echo "  ~ $destinazione ( il precedente va in $copia )"
     fai "mkdir -p '$( dirname "$copia" )'"
-    fai "cp -a '$destinazione' '$copia'"
+    # -n: rilanciato due volte nello stesso giorno, la prima copia ( l'originale vero ) resta
+    fai "cp -an '$destinazione' '$copia'"
   else
     echo "  + $destinazione"
   fi
