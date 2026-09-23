@@ -55,9 +55,11 @@ fi
 H "SSH: QUANTO E' SATURA LA PORTA 22 ADESSO"
 echo "connessioni sulla 22: $( ss -tn 2>/dev/null | grep -c ':22 ' )    processi sshd: $( pgrep -c sshd )"
 echo "-- e quanto ne regge sshd prima di scartare --"
-sshd -T >/dev/null 2>&1 || echo "⚠ sshd -T non risponde: i controlli SSH qui sotto NON sono stati fatti"
-sshd -T 2>/dev/null | grep -iE 'maxstartups|logingracetime|permitrootlogin|passwordauthentication|kbdinteractiveauthentication|^port '
-sshd -T 2>/dev/null | grep -qiE '^(passwordauthentication|kbdinteractiveauthentication) yes' \
+# con un blocco Match gli OpenSSH piu' vecchi rifiutano "sshd -T" senza una connessione di prova
+sshdT() { sshd -T 2>/dev/null || sshd -T -C user=root,host=localhost,addr=127.0.0.1 2>/dev/null; }
+sshdT >/dev/null || echo "⚠ sshd -T non risponde: i controlli SSH qui sotto NON sono stati fatti"
+sshdT | grep -iE 'maxstartups|logingracetime|permitrootlogin|passwordauthentication|kbdinteractiveauthentication|^port '
+sshdT | grep -qiE '^(passwordauthentication|kbdinteractiveauthentication) yes' \
   && echo "⚠ SSH accetta ancora le password: la regola e' solo chiave ( SKILL.md, punto 3 )"
 K=$( grep -cE '^[^#]*(ssh-|ecdsa-|sk-)' /root/.ssh/authorized_keys 2>/dev/null ); K=${K:-0}
 S=$( grep -E '^[^#]*(ssh-|ecdsa-|sk-)' /root/.ssh/authorized_keys 2>/dev/null | awk 'NF<3' | wc -l )

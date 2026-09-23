@@ -183,7 +183,7 @@ Per ogni cosa messa in piedi, la domanda è: **qual è la prova che funziona?**
 | messo in opera | la prova che funziona |
 |---|---|
 | fail2ban | `fail2ban-regex <log> <filtro>` conta i match sulle righe vere; poi `fail2ban-client status <jail>` e la catena `f2b-*` in `iptables -L INPUT` |
-| una direttiva sshd | `sshd -T \| grep <direttiva>`, che stampa il valore **attivo**, non quello scritto nel file |
+| una direttiva sshd | `sshd -T \| grep <direttiva>`, che stampa il valore **attivo**, non quello scritto nel file. ⚠ Se c'è un blocco `Match`, gli OpenSSH più vecchi non stampano niente senza `-C user=root,host=localhost,addr=127.0.0.1`: un `grep` vuoto non vuol dire "direttiva assente" |
 | una regola di firewall | i contatori `pkts/bytes` di `iptables -L -n -v` che salgono |
 | un cron | la riga nel log al primo giro utile, non la crontab che lo contiene |
 | un servizio al boot | `systemctl is-enabled`, che è una domanda diversa da `is-active` |
