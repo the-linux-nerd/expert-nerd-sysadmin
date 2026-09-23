@@ -55,17 +55,41 @@ for f in "$CD"/bin/*; do
 done
 
 echo "== memoria =="
+# Le memorie del metodo si chiamano nerd-*.md: vivono nel repo e si modificano solo li'.
+# Tutte le altre sono della macchina: install.sh non le legge e non le tocca.
 # I server sono sessioni aperte come root da /root, quindi il progetto e' "-root".
 MEM="$DEST/projects/-root/memory"
 if [ -d "$MEM" ]; then
-  for f in "$CD"/memory/*.md; do
-    b=$( basename "$f" )
+  for f in "$CD"/memory/nerd-*.md; do
+    b=$( basename "$f" ); vecchio=${b#nerd-}
+    # migrazione una tantum: la copia installata prima del prefisso, se e' la stessa, va nel backup
+    if [ -f "$MEM/$vecchio" ] && [ ! -f "$MEM/$b" ]; then
+      if sed 's/^name: nerd-/name: /; s/\[\[nerd-/[[/g' "$f" | cmp -s - "$MEM/$vecchio"; then
+        echo "  > $vecchio diventa $b ( la vecchia va in $BAK/ )"
+        fai "mkdir -p '$BAK/projects/-root/memory'"
+        fai "cp -an '$MEM/MEMORY.md' '$BAK/projects/-root/memory/MEMORY.md'"
+        fai "mv '$MEM/$vecchio' '$BAK/projects/-root/memory/$vecchio'"
+        fai "sed -i 's#($vecchio)#($b)#' '$MEM/MEMORY.md'"
+      else
+        echo "  ⚠ $MEM/$vecchio e' stata modificata qui: non la migro, e $b non la installo accanto."
+        echo "    Le modifiche che valgono per il metodo vanno nel repo; poi si toglie la vecchia e si rilancia."
+        continue
+      fi
+    elif [ -f "$MEM/$b" ] && ! cmp -s "$f" "$MEM/$b"; then
+      echo "  ⚠ $b e' diversa da quella del repo: le memorie nerd- si modificano nel repo, non qui."
+      echo "    Vince il repo; la versione locale resta nel backup."
+    fi
     metti "$f" "$MEM/$b"
     titolo=$( sed -n 's/^description: *//p' "$f" | head -1 )
-    if ! grep -q "$b" "$MEM/MEMORY.md" 2>/dev/null; then
+    if ! grep -q "($b)" "$MEM/MEMORY.md" 2>/dev/null; then
       echo "  + riga in MEMORY.md per $b"
       fai "printf -- '- [%s](%s) — %s\n' \"\${b%.md}\" \"$b\" \"$titolo\" >> '$MEM/MEMORY.md'"
     fi
+  done
+  # quelle che il repo non ha piu': si segnalano, non si cancellano
+  for f in "$MEM"/nerd-*.md; do
+    [ -e "$f" ] && [ ! -f "$CD/memory/$( basename "$f" )" ] \
+      && echo "  ? $f non e' piu' nel repo: se e' il caso si toglie a mano, con la sua riga in MEMORY.md"
   done
 else
   echo "  ( $MEM non esiste: la memoria si installa da sola alla prima sessione, rilancia dopo )"

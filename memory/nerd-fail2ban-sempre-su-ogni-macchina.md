@@ -1,5 +1,5 @@
 ---
-name: fail2ban-sempre-su-ogni-macchina
+name: nerd-fail2ban-sempre-su-ogni-macchina
 description: Regola fissa di Fabio: fail2ban va installato su ogni macchina esposta a Internet, non si valuta caso per caso
 metadata:
   type: feedback

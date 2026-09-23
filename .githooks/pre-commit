@@ -2,13 +2,18 @@
 # Blocca il commit se nei file in stage compare qualcosa che somiglia a un segreto.
 # Si installa con:  git config core.hooksPath .githooks   ( lo fa install.sh )
 MOTIVI=""
-FILES=$( git diff --cached --name-only --diff-filter=ACM )
+FILES=$( git diff --cached --name-only --diff-filter=ACMR )
 [ -z "$FILES" ] && exit 0
 
 for f in $FILES; do
   case "$f" in
     *.pem|*.key|id_rsa*|id_ed25519*|*authorized_keys*|.env|.env.*|.netrc)
       MOTIVI="$MOTIVI\n  $f: il nome stesso del file dice che e' un segreto" ;;
+  esac
+  case "$f" in memory/*)
+    case "${f#memory/}" in nerd-*.md) ;;
+      *) MOTIVI="$MOTIVI\n  $f: in memory/ entrano solo le memorie del metodo, col prefisso nerd- ( le altre sono della macchina )" ;;
+    esac ;;
   esac
   git show ":$f" 2>/dev/null | grep -qE -- "-----BEGIN [A-Z ]*PRIVATE KEY-----" \
     && MOTIVI="$MOTIVI\n  $f: contiene una chiave privata"

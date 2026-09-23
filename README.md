@@ -13,7 +13,7 @@ per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal
 | `skills/sysadmin-thelinuxnerd/scripts/triage.sh` | prima passata di diagnosi, **sola lettura**: carico, disco, porte esposte, volume degli attacchi SSH, stato delle difese, modifiche recenti in `/etc` |
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
 | `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto |
-| `memory/` | le regole fisse, in forma di memoria di Claude: per ora *fail2ban va sempre messo* |
+| `memory/` | le regole fisse, in forma di memoria di Claude, tutte col prefisso `nerd-`: *fail2ban va sempre messo*, *SSH solo a chiave* |
 
 I fatti della singola macchina — a cosa serve, cosa espone, cosa è già stato deciso — **non stanno qui**: vanno in un `/root/READ.md` locale, che la skill sa di dover leggere e che non si pubblica.
 
@@ -27,6 +27,13 @@ I fatti della singola macchina — a cosa serve, cosa espone, cosa è già stato
 Copia dentro `~/.claude/` ( skill, `bin/`, e le memorie in `projects/-root/memory/` ), e mette da
 parte con `.bak-AAAAMMGG` qualunque file diverso che stia già lì. È **idempotente**: rilanciarlo
 dopo ogni `git pull` è il modo normale di aggiornare.
+
+**Le memorie del metodo si chiamano `nerd-*.md`, e solo loro.** Vivono nel repo e si modificano
+solo qui: `install.sh` le copia nella memoria della macchina, e se ne trova una modificata sul
+posto lo dice e vince il repo. Tutte le altre memorie sono **della macchina** — clienti, percorsi,
+decisioni — e non escono mai: `install.sh` non le legge, e il pre-commit rifiuta in `memory/`
+qualunque file senza il prefisso. Un fatto di una macchina non va dentro una `nerd-`: va in una
+memoria col nome suo, o nel `/root/READ.md`.
 
 ⚠ Se `~/.claude/projects/-root/memory/` non esiste ancora, le memorie vengono saltate: nasce alla
 prima sessione di Claude su quella macchina, poi basta rilanciare `install.sh`.
