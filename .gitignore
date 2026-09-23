@@ -20,5 +20,6 @@ known_hosts
 *.db
 # roba di macchina, non di metodo
 TODO.md
+READ.md
 *.bak-*
 *.log

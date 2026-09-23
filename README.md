@@ -1,8 +1,7 @@
 # TheLinuxNerd — il metodo, diffuso sulle macchine
 
-Il modo in cui Fabio *TheLinuxNerd* Mosti amministra le sue macchine Linux, scritto in una skill
-per Claude Code, più gli strumenti che la skill usa. Nato su **web02 il 23/09/2026**, dal giro
-sul brute force SSH.
+Il modo in cui **TheLinuxNerd** amministra le sue macchine Linux, scritto in una skill
+per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal giro su un brute force SSH.
 
 ## Cosa c'è dentro
 
@@ -13,6 +12,8 @@ sul brute force SSH.
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
 | `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto |
 | `memory/` | le regole fisse, in forma di memoria di Claude: per ora *fail2ban va sempre messo* |
+
+I fatti della singola macchina — a cosa serve, cosa espone, cosa è già stato deciso — **non stanno qui**: vanno in un `/root/READ.md` locale, che la skill sa di dover leggere e che non si pubblica.
 
 ## Installare su una macchina nuova
 
@@ -35,7 +36,7 @@ prima sessione di Claude su quella macchina, poi basta rilanciare `install.sh`.
   `.gitignore` e l'hook `pre-commit` in `.githooks/`, che blocca il commit se in stage compare
   qualcosa che somiglia a una credenziale. `install.sh` attiva l'hook da solo
   ( `git config core.hooksPath .githooks` ); se serve scavalcarlo, `git commit --no-verify`.
-- **Il `CLAUDE.md`**, che ha già il suo canale di diffusione dal Dropbox di Fabio: metterlo anche
+- **Il `CLAUDE.md`**, che ha già il suo canale di diffusione: metterlo anche
   qui vorrebbe dire due sorgenti di verità che divergono.
 - **I `TODO.md` e i `.bak-*` delle macchine**: sono stato di quella macchina, non metodo. Il
   `.gitignore` li esclude apposta.

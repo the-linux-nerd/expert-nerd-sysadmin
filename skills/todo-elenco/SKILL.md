@@ -42,8 +42,8 @@ che dice cosa vuol dire quella terna e quante voci contiene.
 
     | riga | area | cosa |
     |---|---|---|
-    | 228 | rapporti SSN | **domani 23/09: collaudo completo scaricamento Rapporto GIMBE + donazione** |
-    | 348 | rapporti SSN | 9° Rapporto: pubblicare le due pagine il **7 ottobre** |
+    | 228 | certificati | **domani scade il certificato di www.esempio.it: rinnovo e collaudo** |
+    | 348 | backup | ripristino di prova del dump notturno, entro il **7 del mese** |
 
 Tre colonne e non di piu': **riga**, **area**, **cosa**. La riga serve per aprire la voce, l'area
 per capire dove si sta mettendo le mani, il testo per decidere.
