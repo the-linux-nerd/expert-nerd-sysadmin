@@ -52,6 +52,8 @@ prima sessione di Claude su quella macchina, poi basta rilanciare `install.sh`.
 
 ## Aggiornare il metodo
 
-Si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`. Modificare
+Si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`.
+La skill lo fa da sola: all'inizio di un lavoro, se l'ultimo controllo ha più di sette giorni,
+fa `fetch`, `pull --ff-only` e `install.sh`. Modificare
 direttamente un `~/.claude/skills/...` su una macchina qualsiasi funziona per quella macchina e
 si perde al primo aggiornamento.

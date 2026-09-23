@@ -15,6 +15,31 @@ Il filo è uno solo:
 > **Misura prima, cambia poco e in modo reversibile, verifica che funzioni davvero, e scrivi
 > quello che resta invece di raccontarlo.**
 
+## Prima di cominciare: la skill si aggiorna da sola
+
+Il metodo cresce nel repository ( `github.com/the-linux-nerd/expert-nerd-sysadmin` ), non sulla
+macchina: una copia installata un mese fa lavora con le regole di un mese fa. Per questo, **all'inizio
+di ogni lavoro su una macchina, se l'ultimo controllo ha più di sette giorni**, si guarda se sul
+repo c'è di nuovo e ci si aggiorna, prima di tutto il resto:
+
+    R=~/thelinuxnerd; S=~/.claude/.thelinuxnerd-controllo
+    if [ -d "$R/.git" ] && [ -z "$( find "$S" -mtime -7 2>/dev/null )" ]; then
+      git -C "$R" fetch -q origin && touch "$S" &&
+      if [ "$( git -C "$R" rev-parse HEAD )" != "$( git -C "$R" rev-parse '@{u}' )" ]; then
+        git -C "$R" log --oneline HEAD..'@{u}'
+        git -C "$R" pull -q --ff-only && ( cd "$R" && ./install.sh )
+      fi
+    fi
+
+- Se è arrivato qualcosa, **si rilegge questo file** prima di andare avanti: quello già caricato
+  in contesto è la versione vecchia. All'amministratore basta una riga, coi titoli dei commit.
+- ⚠ **Se il `pull --ff-only` rifiuta**, il clone ha modifiche locali o una storia divergente: non
+  si forza, non si fa `reset`. Si dice all'amministratore e si lavora con la versione installata.
+- Se il `fetch` fallisce ( niente rete, niente accesso a GitHub ) il controllo si ripete la volta
+  dopo: il file `$S` si tocca solo quando il controllo è riuscito.
+- Se il clone non sta in `~/thelinuxnerd`, lo si trova con
+  `git -C <cartella> remote get-url origin` e lo si segnala: l'installazione standard è quella.
+
 ## 0. Le particolarità della macchina stanno in `/root/READ.md`
 
 Questa skill è il **metodo**, e vale su qualunque macchina. Quello che invece cambia da macchina a
