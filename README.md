@@ -7,7 +7,9 @@ per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal
 
 | percorso | cos'è |
 |---|---|
-| `skills/sysadmin-thelinuxnerd/` | la skill: il metodo in otto punti ( misurare prima, backup datato, testare la config, fail2ban sempre, "active non è una verifica", il confine fra quello che si fa da soli e quello che decide Fabio ) |
+| `skills/sysadmin-thelinuxnerd/` | la skill: il metodo in dodici punti ( misurare prima, backup datato, testare la config, fail2ban sempre, "active non è una verifica", il confine fra quello che si fa da soli e quello che decide Fabio ) |
+| `skills/sysadmin-thelinuxnerd/references/intrusione.md` | quando la macchina è davvero compromessa: gli strati, dove si nascondono gli impianti, l'ordine della bonifica, e la sorveglianza che non è teatro — si apre dal punto 7 della skill |
+| `skills/sysadmin-thelinuxnerd/scripts/hunt.sh` | caccia agli impianti, **sola lettura**: processi travestiti, immutabili, generatori systemd e regole udev senza pacchetto, eseguibili orfani, `/dev/shm`, connessioni col processo, invarianti di privilegio |
 | `skills/sysadmin-thelinuxnerd/scripts/triage.sh` | prima passata di diagnosi, **sola lettura**: carico, disco, porte esposte, volume degli attacchi SSH, stato delle difese, modifiche recenti in `/etc` |
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
 | `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto |

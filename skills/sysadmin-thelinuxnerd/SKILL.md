@@ -56,6 +56,11 @@ pronto per la prima passata:
 ascolto, accessi riusciti, volume degli attacchi SSH, stato di firewall e fail2ban, modifiche
 recenti in `/etc`.
 
+⚠ **Nel primo giro si guarda anche la data di fine supporto della distribuzione**, insieme alle
+porte aperte: è un dato di sicurezza, non un debito tecnico. Su una macchina a fine vita `apt`
+annunciava **199 aggiornamenti e non ne esisteva nessuno** — il repository di sicurezza rispondeva
+404 — e l'ingresso più probabile era proprio un pannello che, lì, non si poteva più aggiornare.
+
 ## 2. Prima di toccare una configurazione
 
 1. **Backup datato, con la data nel nome della cartella e non dopo l'estensione**:
@@ -101,7 +106,7 @@ aprire una seconda sessione prima di procedere.
 
 **Su ogni macchina esposta a Internet fail2ban ci va, e ce lo si mette la prima volta che ci si
 mette mano.** Non è una valutazione da rifare ogni volta: è il minimo sindacale, e sta nel lato
-"si fa da soli" del confine del punto 7 — è additivo, reversibile, e non cambia il modo in cui le
+"si fa da soli" del confine del punto 8 — è additivo, reversibile, e non cambia il modo in cui le
 altre persone usano la macchina.
 
 **Perché, misurato il 23/09/2026**: 25.531 tentativi SSH in undici ore da 440 IP distinti. La
@@ -166,7 +171,7 @@ vede chi attacca:
 e deve rispondere `publickey`, nient'altro. Da dentro, `sshd -T | grep -E
 'passwordauth|kbdinteractive|permitrootlogin'`, che tiene conto anche dei `Match` e degli `Include`.
 
-⚠ **Qui la regola fissa incontra il confine del punto 7**: spegnere le password chiude fuori chi
+⚠ **Qui la regola fissa incontra il confine del punto 8**: spegnere le password chiude fuori chi
 entra così. Prima si contano gli accessi a password riusciti,
 `zgrep -h 'Accepted password' /var/log/auth.log* | awk '{print $9}' | sort | uniq -c`, e con quel
 numero in mano il quando lo decide l'amministratore. Il difetto però si segnala per primo, prima
@@ -190,7 +195,8 @@ Per ogni cosa messa in piedi, la domanda è: **qual è la prova che funziona?**
 | un allarme | il messaggio **ricevuto**: si provoca la condizione una volta e si guarda il telefono, non il log dello script |
 | i certificati | `certbot renew --dry-run` che elenca **tutti** quelli attesi; il "success" del timer riguarda solo quelli che ha letto |
 | una correzione a uno script che si reinstalla da solo | il giro **dopo** quello atteso: il primo esegue ancora la copia vecchia, che poi installa la nuova |
-| uno scanner di malware | un file di prova che deve trovare: zero riscontri può voler dire che non sta guardando |
+| uno scanner di malware | un file di prova che deve trovare: zero riscontri può voler dire che non sta guardando. E firme aggiornate: uno scanner che non può scaricarle è teatro, e si spegne **dichiarandolo** |
+| una regola di auditd | che `audit.log` copra ore, non minuti: in `ls -la /var/log/audit/` gli archivi **timbrati tutti allo stesso minuto** vogliono dire che una regola registra rumore e cancella il resto |
 | un backup | il ripristino di prova, qui sotto |
 
 Nel caso originario la verifica di fail2ban è stata `fail2ban-regex` sulle ultime 3000 righe di
@@ -203,7 +209,10 @@ macchina con un certbot più recente, venivano **saltate senza un errore** mentr
 riportava successo per gli altri. Uno scanner costruito su link simbolici ha dato zero riscontri
 per settimane: non li seguiva. Uno strumento aggiornato in `/usr/local/bin` lasciando la copia
 vecchia in `/usr/bin` va bene per chi lo chiama per nome, ma chi lo chiama per percorso assoluto
-( monit, un cron ) continua a usare quella vecchia.
+( monit, un cron ) continua a usare quella vecchia. E un auditd appena installato copriva **gli ultimi
+due o tre minuti**: una regola sulla *lettura* dei flag dei file scattava **~6.900 volte** a ogni
+giro della sentinella che doveva proteggere, e sovrascriveva tutto il resto. Si audita quello che
+l'attaccante fa, non quello che si guarda.
 
 **Un backup vale il ripristino che si è provato.** Uno mai ripristinato è un'ipotesi. Su una
 macchina con decine di siti WordPress il "backup", a guardarlo, erano **solo i dump del database
@@ -233,11 +242,22 @@ monitoraggio c'era e non è servito:
   quello di sistema.
 - **Dice sempre la stessa cosa.** Un controllo che segnalava 2 file fuori posto il 10 del mese ne
   segnalava 19 il 23: nessuno lo leggeva più, perché "è quello solito". Un allarme noto si
-  risolve o si toglie; lasciarlo suonare insegna a ignorare anche quello vero.
+  risolve o si toglie; lasciarlo suonare insegna a ignorare anche quello vero. Una sentinella con la
+  lista di riferimento fotografata **un minuto prima** di installare gli strumenti li ha segnalati
+  ogni quindici minuti per dodici ore: **un allarme ripetuto si chiude entro la giornata**, e le
+  liste si verificano al momento del controllo, non si congelano.
+- **Costa più di quanto protegge.** AIDE puntato anche sui webroot: **dieci ore al 90% di CPU** su
+  una macchina già carica. Una sorveglianza che degrada il servizio prima o poi qualcuno la spegne;
+  allo strumento di sistema il perimetro di sistema.
 - **Guarda solo i file.** Un account di amministratore rubato è entrato **40 volte da 26 IP
   diversi in cinque settimane** senza toccare un file: invisibile a qualunque controllo di
   integrità. L'ha trovato una guardia sugli **accessi** — IP, paesi, orari nuovi per lo stesso
   account — interrogando il registro dei login del plugin di sicurezza.
+
+⚠ **La segnalazione del cliente è un sensore.** Su una macchina compromessa per **tredici mesi**
+l'hanno scoperta tre segnalazioni indipendenti in due giorni — spam nei risultati di Google, un
+plugin attivato da nessuno — non quattro livelli di monitoraggio. Si ascoltano anche le ipotesi
+tecniche sbagliate: descrivono **dove si vede**.
 
 ⚠ **Una baseline rigenerata ogni notte da zero fotografa l'infezione come stato buono.** Il
 controllo di integrità si riallinea da solo solo sui percorsi che conosce già; un percorso
@@ -269,6 +289,10 @@ imparare dal vivo.
   controlla, sovrascritto su tutti. ⚠ Un aggiornamento del pacchetto può rimettere quella riga:
   le invarianti di privilegio ( `sudoers.d`, gruppo `sudo`, UID 0, `/etc/ld.so.preload`,
   `PasswordAuthentication` ) si sorvegliano con un controllo che gira, non si sistemano una volta.
+  ⚠ Il pannello è superficie anche come codice: su un'altra macchina la sua **pagina di login**
+  caricava una libreria JavaScript con un loader accodato che rubava le credenziali a chi le
+  digitava, e due webshell stavano nelle cartelle `examples/` di uno strumento incluso. Le sue
+  cartelle di esempio, `vendor/` e gli asset statici si guardano per primi.
 
 **Cosa ha fermato e cosa no.** Con l'admin rubato l'attaccante ha provato l'editor dei temi ( 403,
 fermato dall'hardening ) e il caricamento di un plugin ( 500 ); poi ha **disattivato il plugin di
@@ -288,7 +312,9 @@ e nemmeno il backup: il suo era vuoto, dato per scontato.
 database, mai dall'interfaccia del sistema che si sta controllando**. Lo stesso per i file:
 webshell in percorsi che sembrano di servizio — cache, cartelle temporanee degli aggiornamenti,
 `.well-known/`, un nome esadecimale dentro un plugin vero — e un'intestazione PNG scritta **come
-testo** per passare i controlli sui magic byte. `wp core verify-checksums` è necessario e non basta.
+testo** per passare i controlli sui magic byte. `wp core verify-checksums` è necessario e non basta:
+un `auto_prepend_file` scritto da root nei `php.ini` ha infettato **tutti i siti insieme** con core,
+plugin e webroot perfettamente integri.
 
 **La quarantena batte la disattivazione.** Un plugin per rubare credenziali non si è mai attivato
 per un errore dell'attaccante, ma la webshell nella stessa cartella è stata eseguita lo stesso con
@@ -311,13 +337,50 @@ E fail2ban sui log di nginx, con jail per i tentativi su `wp-login.php`, le scan
 webshell e le ricognizioni. Dopo ogni modifica, `nginx -t` e poi una richiesta vera che deve
 prendere il 403 ( punto 4 ).
 
-⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate**, fra
+⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate** ( 15 su un'altra, molte di macchine dismesse ), fra
 portatili e telefoni personali, senza un nome né una scadenza: una qualunque di quelle macchine
 persa è una porta aperta, ed è uno dei canali più plausibili della fuga di credenziali. Si
 contano, ognuna deve avere il proprietario nel commento, e quelle senza si propongono per la
 rimozione — che decide l'amministratore, perché toglie l'accesso a qualcuno.
 
-## 7. Il confine: cosa si fa da soli, cosa decide l'amministratore
+## 7. Quando è davvero un'intrusione
+
+Quando i segni smettono di essere rumore di fondo — un binario che nessun pacchetto dichiara, un
+processo che si finge thread del kernel, un `auto_prepend_file` che nessuno ha scritto — il giro
+cambia natura, e i primi gesti decidono se si impara qualcosa o si ripulisce di nuovo la settimana
+dopo. Il riferimento completo è **`references/intrusione.md`**, nato da una macchina compromessa a
+livello root per **tredici mesi** senza che nessuno se ne accorgesse: si apre adesso, non dopo. La
+caccia in sola lettura la fa `scripts/hunt.sh`.
+
+⚠ **Non si uccide niente prima di aver bloccato l'uscita e cercato il guardiano.** L'ordine è:
+regola di firewall **in uscita** verso chi comanda l'impianto; evidenze copiate nella cartella
+dell'incidente, con lo `stat` completo; persistenza disarmata ( timer, service, generatori systemd,
+regole udev, cron ); flag immutabili tolti e file rimossi; **per ultimi** i processi. In quel caso,
+alla prima uccisione l'impianto è rinato — ed è così che si è trovato lo strato di un anno prima.
+Se qualcosa torna, non è un fallimento: è un'informazione.
+
+⚠ **Il lavoro non finisce alla prima cosa trovata.** Quattro strati in una sera, e ogni volta
+sembrava finita. Dopo ogni ritrovamento la domanda è *"questo come ci è arrivato?"*, finché la
+risposta è "da qui" e non "boh".
+
+**Si cerca per tecnica, non per nome.** Gli indicatori di un attaccante scadono in mesi, i
+nascondigli no: eseguibili nelle directory di sistema che nessun pacchetto dichiara ( chiesto a
+dpkg **in quel momento**, con usrmerge gestito ), generatori systemd, regole udev, flag immutabili,
+`/dev/shm`. Il `ctime` non si falsifica con `touch`, ed è il dato che ricostruisce la cronologia.
+
+**Il sintomo può esistere solo per chi non sei tu.** Un cloaking serve lo spam soltanto ai bot dei
+motori di ricerca e a un profilo preciso di visitatori: un sito "che a me risponde bene" non prova
+niente. Si prova con lo user-agent del bot, e `http://` separato da `https://`.
+
+**Una sorveglianza nuova si verifica come tutto il resto** ( punto 4 ). Appena installata, lì,
+auditd copriva gli ultimi tre minuti e la sentinella ripeteva un falso allarme ogni quindici: **un
+controllo nuovo si prova che registri davvero, e un allarme ripetuto si chiude entro la giornata**.
+È la differenza fra sorveglianza e teatro. Il confine del punto 8 resta: bloccare l'uscita e
+copiare le evidenze si fa da soli; spegnere un sito, togliere accessi e ruotare le credenziali degli
+altri lo decide l'amministratore, con i numeri in mano. E quello che non si può ricostruire perché
+non era registrato si dice ( punto 11 ).
+
+## 8. Il confine: cosa si fa da soli, cosa decide l'amministratore
 
 Questo è il punto su cui la skill esiste. Quando arriva un **"fai quello che puoi fare"**, non
 vuol dire "fai tutto": vuol dire *fai il massimo di quello che non richiede una mia decisione, e
@@ -339,7 +402,7 @@ protezione anti-brute-force. È stato lasciato fuori **dicendolo**, insieme al c
 sbannarsi. Il criterio: se una scelta rende la macchina un po' meno sicura in cambio di comodità,
 **la sceglie l'amministratore, sapendolo**.
 
-## 8. Quello che resta si scrive, non si racconta
+## 9. Quello che resta si scrive, non si racconta
 
 Un problema trovato e lasciato in chat è un problema perso: la sessione finisce, il contesto si
 azzera, e tra un mese nessuno se ne ricorda. Quindi, **prima** di chiudere:
@@ -353,7 +416,7 @@ azzera, e tra un mese nessuno se ne ricorda. Quindi, **prima** di chiudere:
 - in chat restano **cosa è chiuso e dove sta scritto**, più i rami **come conteggio**, non come
   elenco da rileggere.
 
-## 9. Quello che non si rimette in discussione
+## 10. Quello che non si rimette in discussione
 
 Su ogni macchina ci sono cose già decise, e ridiscuterle a ogni giro è rumore. Stanno in
 `/root/READ.md` e nella memoria: **si guardano prima di "scoprire" un problema**. Se una cosa è
@@ -362,7 +425,7 @@ già stata vista e decisa, si dice in una riga che è una scelta consapevole e s
 Vale anche al contrario: se una decisione vecchia ora è **smentita dai numeri**, si porta il
 numero, non l'opinione.
 
-## 10. Come si riferisce
+## 11. Come si riferisce
 
 Chi legge vuole sapere tre cose, in quest'ordine: **cos'era davvero**, **cos'è stato fatto**,
 **cosa resta da decidere**.
@@ -376,4 +439,9 @@ Chi legge vuole sapere tre cose, in quest'ordine: **cos'era davvero**, **cos'è 
 - **Percorsi con il numero di riga** ( `/etc/ssh/sshd_config:102` ), comandi per intero, nomi dei
   file di backup. Chi legge deve poter rifare e disfare tutto senza chiedere.
 - Niente allarmismo e niente trionfalismo: se una cosa non è stata verificata, si dice che non è
-  stata verificata.
+  stata verificata. Dopo un'intrusione vale per la ricostruzione: quando i log non c'erano ( otto
+  giorni di retention contro tredici mesi di impianto ), la convergenza di IP, porta, processo,
+  orario e firma riprodotta è una prova solida, e **si dichiara per quello che è** — ricostruzione,
+  non registrazione.
+- **Al cliente il vettore non si racconta**: si dice cosa è stato verificato, cosa deve fare lui e
+  cosa non deve toccare. I dettagli in `references/intrusione.md`, punto 11.
