@@ -5,6 +5,8 @@
 #       triage.sh --ssh      solo la parte SSH / attacchi
 
 set -u
+# /usr/sbin non e' sempre nel PATH ( cron, sessioni non di login ): senza, sshd -T tace e ogni controllo sotto passa
+PATH="$PATH:/usr/sbin:/sbin"
 H() { printf '\n\033[1m=== %s ===\033[0m\n' "$1"; }
 OGGI=$( LC_ALL=C date "+%b %e" )
 SOLO_SSH=${1:-}
@@ -53,6 +55,7 @@ fi
 H "SSH: QUANTO E' SATURA LA PORTA 22 ADESSO"
 echo "connessioni sulla 22: $( ss -tn 2>/dev/null | grep -c ':22 ' )    processi sshd: $( pgrep -c sshd )"
 echo "-- e quanto ne regge sshd prima di scartare --"
+sshd -T >/dev/null 2>&1 || echo "⚠ sshd -T non risponde: i controlli SSH qui sotto NON sono stati fatti"
 sshd -T 2>/dev/null | grep -iE 'maxstartups|logingracetime|permitrootlogin|passwordauthentication|kbdinteractiveauthentication|^port '
 sshd -T 2>/dev/null | grep -qiE '^(passwordauthentication|kbdinteractiveauthentication) yes' \
   && echo "⚠ SSH accetta ancora le password: la regola e' solo chiave ( SKILL.md, punto 3 )"
