@@ -12,7 +12,7 @@ per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal
 | `skills/sysadmin-thelinuxnerd/scripts/hunt.sh` | caccia agli impianti, **sola lettura**: processi travestiti, immutabili, generatori systemd e regole udev senza pacchetto, eseguibili orfani, `/dev/shm`, connessioni col processo, invarianti di privilegio |
 | `skills/sysadmin-thelinuxnerd/scripts/triage.sh` | prima passata di diagnosi, **sola lettura**: carico, disco, porte esposte, volume degli attacchi SSH, stato delle difese, modifiche recenti in `/etc` |
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
-| `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto |
+| `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto. ⚠ **Copia, non fonte**: il sorgente è `~/Dropbox/.claude/` di Fabio, diffuso sui server da `diffondi-server.sh`; qui si aggiorna copiandolo da lì quando cambia, **non si modifica nel repo** |
 | `memory/` | le regole fisse, in forma di memoria di Claude, tutte col prefisso `nerd-`: *fail2ban va sempre messo*, *SSH solo a chiave* |
 
 I fatti della singola macchina — a cosa serve, cosa espone, cosa è già stato deciso — **non stanno qui**: vanno in un `/root/READ.md` locale, che la skill sa di dover leggere e che non si pubblica.
