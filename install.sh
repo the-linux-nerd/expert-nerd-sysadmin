@@ -83,7 +83,9 @@ if [ -d "$MEM" ]; then
     titolo=$( sed -n 's/^description: *//p' "$f" | head -1 )
     if ! grep -q "($b)" "$MEM/MEMORY.md" 2>/dev/null; then
       echo "  + riga in MEMORY.md per $b"
-      fai "printf -- '- [%s](%s) — %s\n' \"\${b%.md}\" \"$b\" \"$titolo\" >> '$MEM/MEMORY.md'"
+      # la riga si compone fuori da eval: una description con le virgolette la spezzerebbe
+      riga=$( printf -- '- [%s](%s) — %s' "${b%.md}" "$b" "$titolo" )
+      fai "printf '%s\n' \"\$riga\" >> '$MEM/MEMORY.md'"
     fi
   done
   # quelle che il repo non ha piu': si segnalano, non si cancellano
