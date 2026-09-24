@@ -43,3 +43,10 @@ Il bello di questo approccio è che crea un'esperienza condivisa fra le macchine
 serve si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`.
 La skill lo fa da sola: all'inizio di un lavoro, se l'ultimo controllo ha più di sette giorni,
 fa `fetch`, `pull --ff-only` e `install.sh`.
+
+`install.sh` sovrascrive **solo i file che il repo porta**: le skill che stanno in `skills/`
+( `sysadmin-thelinuxnerd`, `todo-elenco` ), gli script di `bin/` e le memorie `nerd-*.md`. Le
+altre skill e le altre memorie della macchina non le legge e non le tocca, e i file aggiunti a
+mano dentro una cartella del repo restano. Una modifica fatta direttamente sulla macchina a uno
+di quei file, invece, sparisce al primo aggiornamento — la versione precedente finisce in
+`~/.claude/backups/<data>-thelinuxnerd/`, ma nessuno la va a riprendere: va portata qui.
