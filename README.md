@@ -1,7 +1,7 @@
 # TheLinuxNerd — il metodo, diffuso sulle macchine
 
 Il modo in cui **TheLinuxNerd** amministra le sue macchine Linux, scritto in una skill
-per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal giro su un brute force SSH.
+per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dalla lunga maturazione di numerosi esperimenti, tentativi ed errori nell'insegare a un'AI come si amministrano le macchine Linux.
 
 ## Cosa c'è dentro
 
@@ -38,22 +38,8 @@ memoria col nome suo, o nel `/root/READ.md`.
 ⚠ Se `~/.claude/projects/-root/memory/` non esiste ancora, le memorie vengono saltate: nasce alla
 prima sessione di Claude su quella macchina, poi basta rilanciare `install.sh`.
 
-## Cosa NON c'è dentro, e perché
-
-- **Segreti: password, chiavi private, chiavi pubbliche SSH, `.env`, `authorized_keys`.** Questo
-  repository si diffonde su più macchine, quindi è il posto sbagliato. Ci sono due barriere: il
-  `.gitignore` e l'hook `pre-commit` in `.githooks/`, che blocca il commit se in stage compare
-  qualcosa che somiglia a una credenziale. `install.sh` attiva l'hook da solo
-  ( `git config core.hooksPath .githooks` ); se serve scavalcarlo, `git commit --no-verify`.
-- **Il `CLAUDE.md`**, che ha già il suo canale di diffusione: metterlo anche
-  qui vorrebbe dire due sorgenti di verità che divergono.
-- **I `TODO.md` e i `.bak-*` delle macchine**: sono stato di quella macchina, non metodo. Il
-  `.gitignore` li esclude apposta.
-
 ## Aggiornare il metodo
-
-Si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`.
+Il bello di questo approccio è che crea un'esperienza condivisa fra le macchine amministrate; quando
+serve si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`.
 La skill lo fa da sola: all'inizio di un lavoro, se l'ultimo controllo ha più di sette giorni,
-fa `fetch`, `pull --ff-only` e `install.sh`. Modificare
-direttamente un `~/.claude/skills/...` su una macchina qualsiasi funziona per quella macchina e
-si perde al primo aggiornamento.
+fa `fetch`, `pull --ff-only` e `install.sh`.
