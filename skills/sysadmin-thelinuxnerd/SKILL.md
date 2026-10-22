@@ -1,6 +1,6 @@
 ---
 name: sysadmin-thelinuxnerd
-description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione. Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** e che **SSH accetta solo chiavi**, senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi.
+description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** e che **SSH accetta solo chiavi**, senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi.
 ---
 
 # Amministrazione di sistema, come la fa TheLinuxNerd
@@ -39,6 +39,21 @@ repo c'è di nuovo e ci si aggiorna, prima di tutto il resto:
   dopo: il file `$S` si tocca solo quando il controllo è riuscito.
 - Se il clone non sta in `~/thelinuxnerd`, lo si trova con
   `git -C <cartella> remote get-url origin` e lo si segnala: l'installazione standard è quella.
+
+## Prima di cominciare: calabash
+
+Le operazioni ricorrenti si fanno con gli script di **calabash** ( `github.com/istricesrl/calabash` ),
+non con comandi scritti a mano ogni volta. Se sulla macchina non c'è ( `command -v va.bak.sh` non
+trova niente ), **si installa** seguendo le istruzioni di calabash, cioè con il suo script:
+
+    wget https://calabash.videoarts.eu/install.sh && chmod +x ./install.sh && ./install.sh
+
+( da una cartella di lavoro, non dalla radice ). ⚠ Se c'è già ma in `/usr/bin` e `/usr/sbin`, è il
+layout vecchio: l'installer copierebbe tutto anche in `/usr/local`, con doppioni che il `PATH`
+risolve a caso. Lì si aggiungono solo gli script nuovi che servono, e lo si dice.
+
+Quando uno script non fa quello che serve, **si corregge lo script e si aggiorna il repository di
+calabash** ( commit e push ), invece di fare a mano "per questa volta".
 
 ## 0. Le particolarità della macchina stanno in `/root/READ.md`
 
@@ -470,3 +485,15 @@ Chi legge vuole sapere tre cose, in quest'ordine: **cos'era davvero**, **cos'è 
   non registrazione.
 - **Al cliente il vettore non si racconta**: si dice cosa è stato verificato, cosa deve fare lui e
   cosa non deve toccare. I dettagli in `references/intrusione.md`, punto 11.
+
+## 12. Takeout: salvare una macchina prima di spegnerla
+
+> **Prima si collauda il nuovo, poi si spegne il vecchio.**
+
+Che la macchina si trasferisca o si archivi, l'ordine è **censimento → salvataggio → verifica →
+collaudo → spegnimento → dopo**, con `va.takeout.inventory.sh`, `va.takeout.pull.sh` e
+`va.takeout.verify.sh`, e un accesso ssh a chiave verso la macchina da salvare. Il takeout va in
+`/var/backups/NOME/AAAAMMGG-takeout/` sulla macchina dove lavora Claude e si conserva finché
+l'amministratore non decide altrimenti; eliminare la macchina lo decide lui. La procedura completa,
+con gli archivi uno per uno e cosa si guarda nell'inventario, è **`references/takeout.md`**: si apre
+prima di cominciare.
