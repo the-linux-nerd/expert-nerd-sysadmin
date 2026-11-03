@@ -101,6 +101,17 @@ porte aperte: è un dato di sicurezza, non un debito tecnico. Su una macchina a 
 annunciava **199 aggiornamenti e non ne esisteva nessuno** — il repository di sicurezza rispondeva
 404 — e l'ingresso più probabile era proprio un pannello che, lì, non si poteva più aggiornare.
 
+**Prima di mettere un limite si simula sul log vero.** Una soglia "ragionevole" scelta a occhio
+è una diagnosi a orecchio: si rifà l'algoritmo del limite ( per `limit_req` un secchio che perde
+`rate` al secondo e respinge oltre `burst` ) sulle righe di un giorno normale **e** del giorno
+dell'incidente, per due o tre soglie, e si guarda **chi** verrebbe respinto. Misurato il
+03/11/2026: a 1-2 r/s per IP il limite colpiva un lettore di feed di un sito partner; a 5 r/s
+burst 150 non toccava nessuno il giorno normale. E la stessa simulazione ha detto la cosa più
+importante: il sovraccarico da cui si partiva veniva da **50.632 IP distinti**, circa una
+richiesta ciascuno, e nessun limite per IP l'avrebbe fermato. **La prima domanda è "quanti IP
+distinti ha l'incidente?"**: se sono pochi serve un limite per IP, se sono decine di migliaia
+servono una regola sul percorso che costa ( lì era la paginazione profonda ) e la cache.
+
 ## 2. Prima di toccare una configurazione
 
 1. **Backup datato, con la data nel nome della cartella e non dopo l'estensione**:
@@ -141,6 +152,23 @@ toccare una riga di logica:
 sessione già aperta è l'unica rete di sicurezza: si lavora tenendola viva, si verifica subito
 dopo che regge ( `who` ), e se l'intervento è davvero rischioso si chiede all'amministratore di
 aprire una seconda sessione prima di procedere.
+
+### Bloccare un IP
+
+**Un IP non è un client.** Il 02/11/2026, in piena emergenza, un IP che mandava 12.750 richieste
+al giorno con user-agent AhrefsBot è stato chiuso con un DROP in iptables. Era il server di un
+sito partner, e dallo stesso indirizzo passava anche il loro lettore di feed: per **30 ore** quel
+sito non ha più letto i nostri feed, e se n'è accorto il cliente, non noi. In più il blocco non
+serviva: quell'user-agent prendeva già 403 da nginx.
+
+- **Prima di bloccare si guardano tutti gli user-agent e i percorsi di quell'IP**, non solo
+  quello che ha fatto scattare l'allarme, e il suo reverse DNS: un hosting condiviso, un proxy
+  aziendale o una NAT portano client diversi.
+- **Si blocca nel web server, con un 429 o un 403, non con un DROP.** Il DROP è silenzioso: chi
+  lo subisce vede solo timeout, nei log non resta niente, e nessuno collega il disservizio al
+  blocco. Un 429 compare nell'access log di chi lo riceve e nel nostro, e si toglie con un reload.
+- **Ogni blocco porta data e motivo nel commento**, e si decide subito se è temporaneo: un
+  blocco d'emergenza non reso persistente sparisce al riavvio, uno persistente resta per sempre.
 
 ## 3. fail2ban si mette sempre
 
@@ -192,6 +220,12 @@ aggancia, e si guarda che la catena sia in piedi.
 domestici sono dinamici, e domani si esenta uno sconosciuto. Se ci si autobanna, la via d'uscita è
 una riga: `fail2ban-client set sshd unbanip <IP>`.
 
+⚠ **Una whitelist va dove il blocco avverrebbe.** Quando un partner è stato bloccato per errore,
+la richiesta naturale è "mettilo nell'`ignoreip`". Ma se fail2ban ha solo la jail `sshd`, l'unico
+effetto è esentarlo dal ban per brute force SSH: si allenta una protezione senza dargli niente.
+L'esenzione va nel meccanismo che l'aveva colpito ( il `geo` del limite di nginx, la regola del
+firewall ), e si dice perché non si è messa altrove.
+
 ⚠ **`mode = normal` di default.** L'`aggressive` prende anche i `Connection closed by
 authenticating user`, ma può bannare un utente legittimo che chiude in preauth: è un
 peggioramento del servizio in cambio di più protezione, quindi **lo decide l'amministratore**.
@@ -232,6 +266,8 @@ Per ogni cosa messa in piedi, la domanda è: **qual è la prova che funziona?**
 | una regola di firewall | i contatori `pkts/bytes` di `iptables -L -n -v` che salgono |
 | un cron | la riga nel log al primo giro utile, non la crontab che lo contiene |
 | un servizio al boot | `systemctl is-enabled`, che è una domanda diversa da `is-active` |
+| un `limit_req` di nginx | una raffica di prova da un IP finto che deve prendere 429 dopo il burst, un IP in whitelist che deve passare tutto, **e la riga `limiting requests` nel log**. ⚠ Con `limit_req_log_level warn` e l'`error_log` al livello di default ( `error` ) i blocchi non si vedono: il limite lavora e nessuno lo sa |
+| un allarme nuovo | un modo `prova` che lo **dichiara nel testo** del messaggio. ⚠ Forzare la soglia a mano ( `SOGLIA=0` ) manda un allarme vero, indistinguibile da un'emergenza: è successo, e ha richiesto una smentita |
 | un allarme | il messaggio **ricevuto**: si provoca la condizione una volta e si guarda il telefono, non il log dello script |
 | i certificati | `certbot renew --dry-run` che elenca **tutti** quelli attesi; il "success" del timer riguarda solo quelli che ha letto |
 | una correzione a uno script che si reinstalla da solo | il giro **dopo** quello atteso: il primo esegue ancora la copia vecchia, che poi installa la nuova |
@@ -376,6 +412,20 @@ disciplina del singolo sito è esattamente quello che è mancato:
 E fail2ban sui log di nginx, con jail per i tentativi su `wp-login.php`, le scansioni in cerca di
 webshell e le ricognizioni. Dopo ogni modifica, `nginx -t` e poi una richiesta vera che deve
 prendere il 403 ( punto 4 ).
+
+**Con Varnish in mezzo, il limite per IP va sul backend.** La catena tipica di questi pannelli è
+nginx `:443` → Varnish → nginx `:8080` → PHP-FPM. Un `limit_req` sul fronte conta anche le pagine
+servite dalla cache, che non costano niente; sul server `:8080` conta solo quelle fuori cache,
+cioè quelle che arrivano a PHP e MySQL. Due condizioni:
+
+- l'IP del client si legge da un header che **il fronte riscrive sempre**, come `X-Real-IP
+  $remote_addr`, mai da `X-Forwarded-For`, che con `$proxy_add_x_forwarded_for` si porta dietro
+  quello che il client ha scritto;
+- la porta del backend **non deve essere raggiungibile da fuori** ( `ufw status`, e una prova
+  sull'IP pubblico ), altrimenti chiunque si scrive l'header che preferisce.
+
+La whitelist ( il server stesso, che chiama WordPress in loopback; i motori di ricerca; i lettori
+di feed dei partner ) si fa con un `geo` sull'header, e i feed conviene esentarli per percorso.
 
 ⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate** ( 15 su un'altra, molte di macchine dismesse ), fra
 portatili e telefoni personali, senza un nome né una scadenza: una qualunque di quelle macchine
