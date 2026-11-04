@@ -433,6 +433,17 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    La domanda vera è un'altra: quel repository **non sta negli `Origins-Pattern`**, quindi i
    servizi esposti che ne vengono non si aggiornano mai da soli, e la loro versione va confrontata
    a mano coi rilasci di sicurezza ( lì un `proftpd` 1.3.8 senza le lettere `a`–`c` sulla porta 21 );
+   ⚠ **lo stesso numero di versione in due build è un pendente falso, e non si chiude forzando**:
+   misurato il 04/11/2026 su un server con un pannello di hosting, `sgml-base 1.31+nmu1` esisteva
+   su Debian e sul repository del pannello ( pin 1000 ) con due SHA256 diversi. `apt-get -s
+   dist-upgrade` mostrava un `Inst` a versione identica, la storia di apt un `Downgrade: (1.31+nmu1,
+   1.31+nmu1)`, `apt-get install -y` si rifiutava senza `--allow-downgrades` e il pacchetto restava
+   segnalato "da fare a mano" a ogni giro. Si riconosce con `apt-cache show <pacchetto> | grep -E
+   '^(Version|SHA256)'`: due righe uguali di `Version`, due `SHA256`. Forzare l'installazione
+   riapre solo l'altalena; si sceglie una build con un pin per quel solo pacchetto in
+   `/etc/apt/preferences.d/` ( `Package:` + `Pin: release o=Debian` + `Pin-Priority: 1001`, che
+   vince sul pin di origine del pannello ) e si verifica che `Candidate` = `Installed` e che il
+   conteggio dei pendenti scenda a zero;
    ⚠ **"di sicurezza: 0" conta solo i repository della distribuzione**: i repository di terze
    parti non hanno l'etichetta `-security`, e quello che sta in `Unattended-Upgrade::Package-Blacklist`
    non lo aggiorna mai nessuno. Misurato il 04/11/2026 su un web server con pannello: 0 di sicurezza,
