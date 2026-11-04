@@ -64,6 +64,10 @@ if command -v apt-get >/dev/null 2>&1; then
   TOT=$( echo -n "$SIM" | grep -c . ); SEC=$( echo -n "$SIM" | grep -ci 'security' )
   echo "pendenti: $TOT    di sicurezza: $SEC"
   [ "$SEC" -gt 0 ] && echo "⚠ $SEC aggiornamenti di SICUREZZA pendenti: se il prossimo giro automatico non li prende ( o c'erano gia' al precedente ), si riferisce per primo" && echo "$SIM" | grep -i security | awk '{print "   "$2}' | head -8
+  # "di sicurezza" vede solo la distribuzione: terze parti e blacklist non le aggiorna nessuno ( SKILL.md 3-bis, punto 4 )
+  echo "$SIM" | sed -nE 's/^Inst [^ ]+ .*\([^ ]+ ([^ ]+).*/\1/p' | sort | uniq -c | sort -rn | head -5 | sed 's/^/   pendenti da: /'
+  BL=$( apt-config dump 2>/dev/null | sed -n 's/^Unattended-Upgrade::Package-Blacklist:: "\(.*\)";/\1/p' | tr '\n' ' ' )
+  [ -n "$BL" ] && echo "⚠ in blacklist, mai aggiornati da soli ( chi li aggiorna? /root/READ.md ): $BL"
   HOLD=$( apt-mark showhold 2>/dev/null )
   [ -n "$HOLD" ] && echo "pacchetti trattenuti ( ognuno ha il motivo in /root/READ.md? ): $( echo $HOLD )"
 elif command -v dnf >/dev/null 2>&1; then

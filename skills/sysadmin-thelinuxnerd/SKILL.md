@@ -367,6 +367,14 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    quel pacchetto resta scoperto per sempre senza che nessun conteggio di errori salga. Si
    cercano nel log a ogni giro, e ognuno si capisce: dipendenza nuova da installare a mano, pin,
    hold;
+   ⚠ **"di sicurezza: 0" conta solo i repository della distribuzione**: i repository di terze
+   parti non hanno l'etichetta `-security`, e quello che sta in `Unattended-Upgrade::Package-Blacklist`
+   non lo aggiorna mai nessuno. Misurato il 04/11/2026 su un web server con pannello: 0 di sicurezza,
+   ma **117 pendenti di PHP** dal repository del pannello, tutti in blacklist ( con nginx, MySQL e il
+   pannello stesso ) da un file `52-local`. Quindi a ogni giro si legge la blacklist
+   ( `apt-config dump | grep -A9 Package-Blacklist` ) e si contano i pendenti **per origine**:
+   ogni voce della blacklist ha chi la aggiorna a mano e quando, scritto in `/root/READ.md`, o è un
+   buco;
 5. **i pacchetti trattenuti hanno un motivo scritto**: `apt-mark showhold` e i `kept back`. Ogni
    hold sta in `/root/READ.md` con il perché e la data; un hold senza motivo è un buco aperto da
    qualcuno che non c'è più;
