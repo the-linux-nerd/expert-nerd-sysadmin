@@ -98,27 +98,32 @@ else
   echo "  ( $MEM non esiste: la memoria si installa da sola alla prima sessione, rilancia dopo )"
 fi
 
-echo "== hook di sessione: aggiornamenti esclusi dal giro automatico =="
-# a ogni SessionStart nerd-esclusi.sh ricorda al Claude ( e lui al sistemista ) i pendenti che
-# unattended-upgrades non fa: blacklist, hold, repository di terze parti ( SKILL.md 3-bis, punto 4 )
-SET="$DEST/settings.json"
-CMD="bash $DEST/bin/nerd-esclusi.sh hook"
-if [ -f "$SET" ] && grep -qF "nerd-esclusi.sh hook" "$SET"; then
-  echo "  = SessionStart ( gia' registrato )"
-else
-  echo "  + SessionStart: $CMD"
+echo "== hook di sessione =="
+# Registra in settings.json un hook di SessionStart, una volta sola ( si riconosce dal nome dello script ).
+registra_hook() {
+  local cmd="$1" segno="$2" timeout="$3"
+  local SET="$DEST/settings.json"
+  if [ -f "$SET" ] && grep -qF "$segno" "$SET"; then
+    echo "  = SessionStart $segno ( gia' registrato )"
+    return
+  fi
+  echo "  + SessionStart: $cmd"
   if [ -f "$SET" ]; then
     fai "mkdir -p '$BAK' && cp -an '$SET' '$BAK/settings.json'"
   fi
-  fai "python3 - '$SET' '$CMD' <<'PY'
+  fai "python3 - '$SET' '$cmd' '$timeout' <<'PY'
 import json, os, sys
-p, cmd = sys.argv[1], sys.argv[2]
+p, cmd, t = sys.argv[1], sys.argv[2], int(sys.argv[3])
 d = json.load(open(p)) if os.path.exists(p) else {}
-d.setdefault('hooks', {}).setdefault('SessionStart', []).append({'hooks': [{'type': 'command', 'command': cmd, 'timeout': 30}]})
+d.setdefault('hooks', {}).setdefault('SessionStart', []).append({'hooks': [{'type': 'command', 'command': cmd, 'timeout': t}]})
 json.dump(d, open(p + '.nuovo', 'w'), indent=2, ensure_ascii=False)
 os.replace(p + '.nuovo', p)
 PY"
-fi
+}
+# la skill si aggiorna da sola dal repository, una volta al giorno ( SKILL.md, «Prima di cominciare» )
+registra_hook "bash $DEST/bin/nerd-aggiorna.sh hook $CD" "nerd-aggiorna.sh hook" 90
+# i pendenti che unattended-upgrades non fa: blacklist, hold, terze parti ( SKILL.md 3-bis, punto 4 )
+registra_hook "bash $DEST/bin/nerd-esclusi.sh hook" "nerd-esclusi.sh hook" 30
 
 echo "== hook anti-segreti del repository =="
 if [ -d "$CD/.git" ]; then

@@ -12,6 +12,8 @@ per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal
 | `skills/sysadmin-thelinuxnerd/scripts/hunt.sh` | caccia agli impianti, **sola lettura**: processi travestiti, immutabili, generatori systemd e regole udev senza pacchetto, eseguibili orfani, `/dev/shm`, connessioni col processo, invarianti di privilegio |
 | `skills/sysadmin-thelinuxnerd/scripts/triage.sh` | prima passata di diagnosi, **sola lettura**: carico, disco, porte esposte, volume degli attacchi SSH, stato delle difese, aggiornamenti di sicurezza pendenti e riavvii mancati, modifiche recenti in `/etc` |
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
+| `bin/nerd-aggiorna.sh` | la skill si aggiorna da sola: hook di `SessionStart` registrato da `install.sh`, una volta al giorno `fetch`, e se il clone è pulito `pull --ff-only` e `install.sh`; commit locali e modifiche non si forzano mai |
+| `bin/nerd-esclusi.sh` | i pendenti che il giro automatico non fa ( blacklist, hold, terze parti ), ricordati a ogni sessione da un hook di `SessionStart` |
 | `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto. ⚠ **Copia, non fonte**: il sorgente è `~/Dropbox/.claude/` di Fabio, diffuso sui server da `diffondi-server.sh`; qui si aggiorna copiandolo da lì quando cambia, **non si modifica nel repo** |
 | `memory/` | le regole fisse, in forma di memoria di Claude, tutte col prefisso `nerd-`: *fail2ban va sempre messo*, *SSH solo a chiave*, *paranoia sugli aggiornamenti* |
 
@@ -26,7 +28,8 @@ I fatti della singola macchina — a cosa serve, cosa espone, cosa è già stato
 
 Copia dentro `~/.claude/` ( skill, `bin/`, e le memorie in `projects/-root/memory/` ), e mette da
 parte con `.bak-AAAAMMGG` qualunque file diverso che stia già lì. È **idempotente**: rilanciarlo
-dopo ogni `git pull` è il modo normale di aggiornare.
+dopo ogni `git pull` è il modo normale di aggiornare, e dal 04/11/2026 lo fa da solo l'hook
+`nerd-aggiorna.sh` una volta al giorno.
 
 **Le memorie del metodo si chiamano `nerd-*.md`, e solo loro.** Vivono nel repo e si modificano
 solo qui: `install.sh` le copia nella memoria della macchina, e se ne trova una modificata sul

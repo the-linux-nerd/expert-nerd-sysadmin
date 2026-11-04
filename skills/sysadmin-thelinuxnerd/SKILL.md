@@ -18,27 +18,31 @@ Il filo è uno solo:
 ## Prima di cominciare: la skill si aggiorna da sola
 
 Il metodo cresce nel repository ( `github.com/the-linux-nerd/expert-nerd-sysadmin` ), non sulla
-macchina: una copia installata un mese fa lavora con le regole di un mese fa. Per questo, **all'inizio
-di ogni lavoro su una macchina, se l'ultimo controllo ha più di sette giorni**, si guarda se sul
-repo c'è di nuovo e ci si aggiorna, prima di tutto il resto:
+macchina: una copia installata un mese fa lavora con le regole di un mese fa. ⚠ **La regola a
+memoria non bastava**: il 04/11/2026 web02 e web03 erano indietro di 7 commit, cloudpanel01 di 6, e
+la copia installata di web02 non era nemmeno quella del suo clone. Quindi l'aggiornamento **lo fa
+un hook**, non la buona volontà:
 
-    R=~/thelinuxnerd; S=~/.claude/.thelinuxnerd-controllo
-    if [ -d "$R/.git" ] && [ -z "$( find "$S" -mtime -7 2>/dev/null )" ]; then
-      git -C "$R" fetch -q origin && touch "$S" &&
-      if [ "$( git -C "$R" rev-parse HEAD )" != "$( git -C "$R" rev-parse '@{u}' )" ]; then
-        git -C "$R" log --oneline HEAD..'@{u}'
-        git -C "$R" pull -q --ff-only && ( cd "$R" && ./install.sh )
-      fi
-    fi
+- `install.sh` registra `bin/nerd-aggiorna.sh` come hook di `SessionStart`. **Una volta al giorno**
+  fa `fetch`; se origin è avanti e il clone è pulito, `pull --ff-only` e `install.sh`; se la copia
+  installata non è quella del clone, rilancia `install.sh`. Senza niente da dire, tace;
+- ⚠ **se l'hook ha scritto qualcosa, si riferisce all'amministratore nella prima risposta**, in una
+  riga coi titoli dei commit, anche se ha chiesto altro. Se la skill era già in contesto, **si
+  rilegge questo file**: quella caricata è la versione vecchia;
+- **all'inizio di un lavoro lungo**, o se la sessione è aperta da più di un giorno, lo si lancia a
+  mano: `bash ~/.claude/bin/nerd-aggiorna.sh` ( senza `hook` non guarda l'ora dell'ultimo controllo );
+- ⚠ **commit locali, modifiche o storia divergente non si forzano mai**: niente `reset`, niente
+  `pull` a forza. Lo script lo dice, e i commit locali vanno al generale come patch ( sezione
+  sotto ); quando sono in origin, `git reset --hard @{u}` e `./install.sh`;
+- se il `fetch` fallisce ( niente rete, niente accesso a GitHub ) il controllo si ripete alla
+  sessione dopo: l'ora dell'ultimo controllo ( `~/.claude/.thelinuxnerd-controllo` ) si segna solo
+  quando è riuscito;
+- il clone standard è `~/thelinuxnerd`; se sta altrove, l'hook lo sa perché `install.sh` gli passa
+  il percorso, ma lo si segnala: l'installazione standard è quella.
 
-- Se è arrivato qualcosa, **si rilegge questo file** prima di andare avanti: quello già caricato
-  in contesto è la versione vecchia. All'amministratore basta una riga, coi titoli dei commit.
-- ⚠ **Se il `pull --ff-only` rifiuta**, il clone ha modifiche locali o una storia divergente: non
-  si forza, non si fa `reset`. Si dice all'amministratore e si lavora con la versione installata.
-- Se il `fetch` fallisce ( niente rete, niente accesso a GitHub ) il controllo si ripete la volta
-  dopo: il file `$S` si tocca solo quando il controllo è riuscito.
-- Se il clone non sta in `~/thelinuxnerd`, lo si trova con
-  `git -C <cartella> remote get-url origin` e lo si segnala: l'installazione standard è quella.
+⚠ **Chi può pushare sul repository esegue codice come root su tutte le macchine**, alla prima
+sessione del giorno dopo. Per questo il push lo fa solo il generale, e una patch che arriva da una
+macchina si legge e si prova prima di pusharla.
 
 ## Alla fine di ogni lavoro: la skill impara
 
