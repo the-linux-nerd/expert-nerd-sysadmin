@@ -367,6 +367,14 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    quel pacchetto resta scoperto per sempre senza che nessun conteggio di errori salga. Si
    cercano nel log a ogni giro, e ognuno si capisce: dipendenza nuova da installare a mano, pin,
    hold;
+   ⚠ **lo scarto quotidiano può venire dal pin di un repository del fornitore**, e allora il
+   problema non è lo scarto: misurato il 04/11/2026 su un server con un pannello di hosting, il
+   pannello fissa a priorità 1000 i suoi `nginx` e `proftpd`, la Debian ha un numero di versione
+   più alto ( `1.3.8.c+dfsg-4+deb13u3` contro `1.3.8-1+clp`, un'epoca `1:` sui moduli nginx ) e il
+   giro automatico li scarta ogni mattina. `apt-cache policy <pacchetto>` lo mostra in una riga.
+   La domanda vera è un'altra: quel repository **non sta negli `Origins-Pattern`**, quindi i
+   servizi esposti che ne vengono non si aggiornano mai da soli, e la loro versione va confrontata
+   a mano coi rilasci di sicurezza ( lì un `proftpd` 1.3.8 senza le lettere `a`–`c` sulla porta 21 );
    ⚠ **"di sicurezza: 0" conta solo i repository della distribuzione**: i repository di terze
    parti non hanno l'etichetta `-security`, e quello che sta in `Unattended-Upgrade::Package-Blacklist`
    non lo aggiorna mai nessuno. Misurato il 04/11/2026 su un web server con pannello: 0 di sicurezza,

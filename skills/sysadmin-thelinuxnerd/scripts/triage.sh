@@ -53,7 +53,7 @@ if command -v apt-get >/dev/null 2>&1; then
     E=$( tail -300 "$L" 2>/dev/null | grep -E 'ERROR|WARNING' | tail -3 )
     [ -n "$E" ] && echo "⚠ errori recenti nel log:" && echo "$E" | cut -c1-140
     # i pacchetti che scarta a ogni giro ( dipendenze, apt_preferences ): restano scoperti per sempre, in silenzio
-    X=$( tail -300 "$L" 2>/dev/null | grep -E 'non viene aggiornato|not upgraded|will not be upgraded|kept back' | grep -oE '(Il pacchetto|[Pp]ackage) [^ ]+' | awk '{print $NF}' | sort -u | tr '\n' ' ' )
+    X=$( tail -300 "$L" 2>/dev/null | grep -E 'non viene aggiornato|not upgraded|will not be upgraded|kept back' | grep -oE '(Il pacchetto|Package) [^ ]+' | awk '{print $NF}' | sort -u | tr '\n' ' ' )
     [ -n "$X" ] && echo "⚠ scartati da unattended-upgrades a ogni giro ( vanno capiti, non ignorati ): $X"
   fi
   G=$( eta /var/lib/apt/periodic/update-success-stamp )
