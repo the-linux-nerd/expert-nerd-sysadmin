@@ -1,6 +1,6 @@
 ---
 name: sysadmin-thelinuxnerd
-description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** e che **SSH accetta solo chiavi**, senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi.
+description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** , che **SSH accetta solo chiavi** e che **gli aggiornamenti di sicurezza si applicano da soli e si verificano a ogni giro** ( "la macchina è aggiornata?", unattended-upgrades, riavvio pendente ), senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi.
 ---
 
 # Amministrazione di sistema, come la fa TheLinuxNerd
@@ -250,6 +250,101 @@ entra così. Prima si contano gli accessi a password riusciti,
 `zgrep -h 'Accepted password' /var/log/auth.log* | awk '{print $9}' | sort | uniq -c`, e con quel
 numero in mano il quando lo decide l'amministratore. Il difetto però si segnala per primo, prima
 di ogni altra cosa del giro.
+
+## 3-bis. Gli aggiornamenti: paranoia, non fiducia
+
+**Su ogni macchina gli aggiornamenti di sicurezza si applicano da soli, e a ogni giro si verifica
+che sia successo davvero.** È la terza regola fissa, insieme a fail2ban e all'SSH solo a chiave:
+detta da Fabio il 04/11/2026, *"dev'essere PARANOICO sugli aggiornamenti"*. Paranoico vuol dire
+che **non ci si fida di niente che dica "aggiornato"** — né del servizio attivo, né del pannello,
+né del conteggio di `apt` — finché non si è visto il numero.
+
+Il perché sta già nel punto 9 di [intrusione.md](references/intrusione.md): l'ingresso più
+probabile di una bonifica era un pannello **non più aggiornabile**, su una distribuzione dove `apt`
+annunciava 199 aggiornamenti che non esistevano. Una macchina che non si aggiorna non si difende,
+e quasi mai lo dice.
+
+**Si installa la prima volta che ci si mette mano**, senza chiedere: è additivo e sta nel lato "si
+fa da soli" del punto 8.
+
+    # Debian / Ubuntu
+    apt-get install -y unattended-upgrades apt-listchanges needrestart
+    dpkg-reconfigure -f noninteractive unattended-upgrades    # scrive 20auto-upgrades
+
+    # RHEL / Alma / Rocky
+    dnf install -y dnf-automatic    # upgrade_type = security, apply_updates = yes in automatic.conf
+    systemctl enable --now dnf-automatic.timer
+
+`/etc/apt/apt.conf.d/20auto-upgrades` deve dire, **tutte e due**:
+
+    APT::Periodic::Update-Package-Lists "1";
+    APT::Periodic::Unattended-Upgrade "1";
+
+Le personalizzazioni ( la mail, le origini ) vanno in un `52unattended-upgrades-local`, non nel
+`50unattended-upgrades` del pacchetto, per lo stesso motivo del `jail.local`. La mail dei giri
+falliti va **all'amministratore** ( `Unattended-Upgrade::Mail` con `MailReport "only-on-error"` ),
+e si verifica che arrivi: un aggiornamento che fallisce in silenzio è il caso "rileva ma non
+consegna" del punto 5.
+
+⚠ **Il riavvio automatico lo decide l'amministratore** ( `Automatic-Reboot` resta `false` di
+default ): spegne il servizio a chi lo usa. Ma il riavvio pendente **non si lascia correre**: si
+segnala a ogni giro, con da quanti giorni aspetta.
+
+### La verifica, che non è `is-active`
+
+Un `unattended-upgrades` installato e acceso non dice niente: può essere spento da
+`20auto-upgrades`, fermo su un lock di `dpkg`, bloccato da un conffile che vuole una risposta,
+cieco perché `apt-get update` fallisce. A **ogni** giro, non solo al primo, si guardano sei cose —
+la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
+
+1. **è acceso davvero**: `apt-config dump | grep Periodic`, e il timer `apt-daily-upgrade.timer`;
+2. **ha girato di recente e senza errori**: data dell'ultimo giro in
+   `/var/log/unattended-upgrades/unattended-upgrades.log`, e le sue righe `ERROR`/`WARNING`. Più di
+   due giorni di silenzio è un sintomo, non una buona notizia;
+3. **le liste sono fresche e i repository rispondono**: `apt-get update` senza `Err:`, senza
+   `404`, senza `Release file ... is not valid yet` o chiavi GPG scadute. Con le liste vecchie il
+   conteggio del punto dopo è falso in tutte e due le direzioni;
+4. **gli aggiornamenti di sicurezza pendenti sono zero**: `apt-get -s dist-upgrade`, contando a
+   parte le righe che vengono da `-security`. ⚠ **Un aggiornamento di sicurezza pendente da più di
+   24 ore è un'anomalia**, e si riferisce **per prima**, prima di ogni altra cosa del giro: vuol
+   dire che il meccanismo automatico non funziona, e va capito perché;
+   ⚠ **i pacchetti che il giro automatico scarta ogni giorno sono il caso peggiore**: il log dice
+   *"non viene aggiornato perché un pacchetto correlato non viene aggiornato o a causa di
+   apt_preferences"* ( visto su camera-max il 04/11/2026, `libgl1-amber-dri` ), il resto passa, e
+   quel pacchetto resta scoperto per sempre senza che nessun conteggio di errori salga. Si
+   cercano nel log a ogni giro, e ognuno si capisce: dipendenza nuova da installare a mano, pin,
+   hold;
+5. **i pacchetti trattenuti hanno un motivo scritto**: `apt-mark showhold` e i `kept back`. Ogni
+   hold sta in `/root/READ.md` con il perché e la data; un hold senza motivo è un buco aperto da
+   qualcuno che non c'è più;
+6. **quello che è stato installato è anche in uso**: `/var/run/reboot-required` ( e `.pkgs` ),
+   il kernel in esecuzione contro il più recente in `/boot`, e i servizi che girano con librerie
+   vecchie ( `needrestart -b`, o i file `(deleted)` che vede `hunt.sh` ). ⚠ **Una patch installata e
+   non caricata non è applicata**: un `sshd` o un `php-fpm` partito prima dell'aggiornamento di
+   OpenSSL è vulnerabile come prima. I servizi si riavviano da soli quando non tolgono niente a
+   nessuno ( un `reload` ); il riavvio della macchina lo decide l'amministratore.
+
+### Fuori dal gestore dei pacchetti, la paranoia raddoppia
+
+`unattended-upgrades` aggiorna solo quello che è passato da `apt`. Tutto il resto **non lo aggiorna
+nessuno finché qualcuno non lo scrive**: pannelli ( CloudPanel, Plesk ), WordPress con core,
+plugin e temi, `composer`, `pip`, `npm`, `snap`, immagini Docker, binari in `/usr/local/bin`,
+repository di terze parti ( PHP di Sury, MariaDB, Node ). Al primo giro su una macchina:
+
+- **si fa l'inventario** di ciò che è installato fuori da `apt`, e per ciascuno **chi lo aggiorna
+  e come**: va in `/root/READ.md`. Una riga *"nessuno"* è una risposta accettabile solo se è scritta
+  e l'amministratore l'ha letta;
+- per WordPress vale il punto 6: con `DISALLOW_FILE_MODS` gli aggiornamenti li fa lo script
+  notturno, e **si verifica che giri** ( `wp core check-update`, `wp plugin list --update=available` );
+- i repository di terze parti si guardano come quello di sicurezza: se la loro chiave scade o il
+  repository chiude, `apt` lo dice con un `W:` che nessuno legge.
+
+### Quello che non si fa da soli
+
+Il passaggio di versione della distribuzione, e quello di un pannello o di un PHP maggiore, **si
+preparano** ( punto 9 di `intrusione.md`: l'upgrade simulato in un'area separata ) e li decide
+l'amministratore. Ma la **data di fine supporto** si riferisce a ogni giro col conto dei mesi che
+restano: sotto i sei mesi, è una voce di sicurezza aperta.
 
 ## 4. "active" non è una verifica
 
