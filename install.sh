@@ -98,6 +98,28 @@ else
   echo "  ( $MEM non esiste: la memoria si installa da sola alla prima sessione, rilancia dopo )"
 fi
 
+echo "== hook di sessione: aggiornamenti esclusi dal giro automatico =="
+# a ogni SessionStart nerd-esclusi.sh ricorda al Claude ( e lui al sistemista ) i pendenti che
+# unattended-upgrades non fa: blacklist, hold, repository di terze parti ( SKILL.md 3-bis, punto 4 )
+SET="$DEST/settings.json"
+CMD="bash $DEST/bin/nerd-esclusi.sh hook"
+if [ -f "$SET" ] && grep -qF "nerd-esclusi.sh hook" "$SET"; then
+  echo "  = SessionStart ( gia' registrato )"
+else
+  echo "  + SessionStart: $CMD"
+  if [ -f "$SET" ]; then
+    fai "mkdir -p '$BAK' && cp -an '$SET' '$BAK/settings.json'"
+  fi
+  fai "python3 - '$SET' '$CMD' <<'PY'
+import json, os, sys
+p, cmd = sys.argv[1], sys.argv[2]
+d = json.load(open(p)) if os.path.exists(p) else {}
+d.setdefault('hooks', {}).setdefault('SessionStart', []).append({'hooks': [{'type': 'command', 'command': cmd, 'timeout': 30}]})
+json.dump(d, open(p + '.nuovo', 'w'), indent=2, ensure_ascii=False)
+os.replace(p + '.nuovo', p)
+PY"
+fi
+
 echo "== hook anti-segreti del repository =="
 if [ -d "$CD/.git" ]; then
   if [ "$( git -C "$CD" config --get core.hooksPath )" = ".githooks" ]; then

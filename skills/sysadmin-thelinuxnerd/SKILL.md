@@ -374,7 +374,10 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    pannello stesso ) da un file `52-local`. Quindi a ogni giro si legge la blacklist
    ( `apt-config dump | grep -A9 Package-Blacklist` ) e si contano i pendenti **per origine**:
    ogni voce della blacklist ha chi la aggiorna a mano e quando, scritto in `/root/READ.md`, o è un
-   buco;
+   buco. **Il conteggio lo fa `nerd-esclusi.sh`** ( blacklist, hold, terze parti ), che `install.sh`
+   registra come hook di `SessionStart`: se ci sono pendenti, **si dice al sistemista umano nella
+   prima risposta della sessione** che vanno fatti a mano, quanti e da dove, anche se ha chiesto
+   altro. Non si aggiornano da soli: la finestra la decide lui;
 5. **i pacchetti trattenuti hanno un motivo scritto**: `apt-mark showhold` e i `kept back`. Ogni
    hold sta in `/root/READ.md` con il perché e la data; un hold senza motivo è un buco aperto da
    qualcuno che non c'è più;
