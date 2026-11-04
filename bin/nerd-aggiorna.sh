@@ -67,7 +67,10 @@ if [ "$A" -gt 0 ]; then
 fi
 
 # clone aggiornato ma copia installata diversa: install.sh non e' stato rilanciato dopo un pull
-if [ "$A" -eq 0 ] && [ "$SPORCHI" -eq 0 ] && ! diff -rq "$R/skills/$SKILL" "$HOME/.claude/skills/$SKILL" >/dev/null 2>&1; then
+# si confrontano solo i file del clone: quelli in piu' nella copia installata ( un SKILL.md.bak-* su
+# web02 ) install.sh non li toglie, e con diff -r si rilancerebbe ogni giorno dicendo "riallineata"
+DIVERSI=$( cd "$R/skills/$SKILL" && find . -type f | while read -r f; do cmp -s "$f" "$HOME/.claude/skills/$SKILL/$f" || echo "$f"; done | grep -c . )
+if [ "$A" -eq 0 ] && [ "$SPORCHI" -eq 0 ] && [ "$DIVERSI" -gt 0 ]; then
   if ( cd "$R" && ./install.sh >/dev/null 2>&1 ); then
     echo "skill $SKILL: la copia installata non era quella del clone ( $PRIMA ), riallineata con install.sh"
   else
