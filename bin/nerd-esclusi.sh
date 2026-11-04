@@ -55,13 +55,22 @@ if command -v apt-get >/dev/null 2>&1; then
   ALTRI=$( echo -n "$NO" | awk -v bl="$( echo $BL | tr ' ' '|' )" 'bl=="" || $1 !~ "^(" bl ")" {print $2}' | sort | uniq -c | sort -rn | head -4 )
   [ -n "$ALTRI" ] && riga "$( echo "$ALTRI" | sed 's/^ *\([0-9]*\) /   \1 da /' )"
   L=/var/log/unattended-upgrades/unattended-upgrades.log
-  ULT=$( [ -f "$L" ] && grep 'Starting unattended upgrades' "$L" | tail -1 | cut -c1-16 )
+  # l'ora dell'ultimo giro dallo stamp, non dal log: il log e' nella lingua della macchina
+  # ( "Avvio script avanzamento senza controllo" su camera-max ), e il grep in inglese dava "mai"
+  P=/var/lib/apt/periodic
+  ULT=$( [ -e $P/unattended-upgrades-stamp ] && date -r $P/unattended-upgrades-stamp '+%F %R' )
+  [ -z "$ULT" ] && ULT=$( [ -f "$L" ] && grep -E 'Starting unattended upgrades|Avvio script' "$L" | tail -1 | cut -c1-16 )
   LIS=$( eta_ore /var/lib/apt/periodic/update-success-stamp )
   [ "$LIS" -lt 0 ] && LIS=$( eta_ore "$( ls -td /var/lib/apt/lists/*_Packages 2>/dev/null | head -1 )" )
   if [ "$TOT" -gt 0 ]; then
     OUT="⚠ AGGIORNAMENTI DA FARE A MANO su $( hostname ): $TOT pendenti che il giro automatico non fa ( ultimo giro: ${ULT:-mai} )
 $OUT"
-    [ "$SEC" -gt 0 ] && riga "⚠ $SEC di SICUREZZA della distribuzione: quelli dovrebbero andare da soli, il meccanismo automatico non funziona"
+    # liste scaricate dopo l'ultimo giro: quei pacchetti il giro non li ha ancora visti
+    if [ "$SEC" -gt 0 ] && [ $P/update-success-stamp -nt $P/unattended-upgrades-stamp ]; then
+      riga "   $SEC di sicurezza arrivati con le liste dopo l'ultimo giro ( $ULT ): li installa il prossimo, si ricontrolla dopo"
+    elif [ "$SEC" -gt 0 ]; then
+      riga "⚠ $SEC di SICUREZZA della distribuzione: c'erano gia' all'ultimo giro ( $ULT ) e non sono andati, il meccanismo automatico non funziona"
+    fi
     [ "$LIS" -ge 48 ] && riga "⚠ liste dei pacchetti vecchie di $LIS ore: il conteggio non e' affidabile"
   fi
 elif command -v dnf >/dev/null 2>&1; then
