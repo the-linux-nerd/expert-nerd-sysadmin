@@ -260,6 +260,27 @@ di configurazione, con un controllo di coerenza **in mezzo**. Il controllo era s
 - **Si verifica l'effetto, non il comando**: login con la nuova, login rifiutato con la vecchia, e
   l'error log del servizio per gli `Access denied` dei minuti successivi.
 
+### Le copie lasciate accanto all'originale si cercano dal web, non dal disco
+
+Il 04/11/2026, mettendo sotto git 39 siti, la scansione delle credenziali ha trovato
+`wp-config.php.pre-mysql02` e `120.mysql.php.pre-mysql02`: copie fatte un mese prima, per una
+migrazione del database. **Rispondevano 200 col sorgente in chiaro**, e una conteneva una password
+SMTP ancora in uso. I log coprivano solo gli ultimi 8 giorni, quindi un download non si poteva
+escludere.
+
+- Il suffisso dopo l'estensione vera fa servire il file come testo, e vale per qualunque suffisso:
+  `-dist`, `_bkp`, `.old`, `.pre-qualcosa`. Una regola che blocca solo `.bak` non basta.
+- Si chiude con un `RedirectMatch 404` globale, che faccia eccezione quando l'estensione finale
+  torna `php`/`js`/`css`/`html` ( `config.inc.php` deve restare servito ). Poi si fa una
+  controprova sulle home e su un file `.inc.php` vero.
+- Per ogni file si verifica con `curl` dal fuori **e** si conta nel corpo della risposta, non nello
+  `stat` sul disco: un 200 può essere la pagina di catch-all di un CMS.
+- Si confronta la password esposta con quella in uso **senza stamparla**: si conta l'insieme in
+  comune. ⚠ Una sostituzione con `sed` che maschera i valori fallisce in silenzio quando la riga
+  non ha la forma attesa, e le password finiscono in chiaro nell'output.
+- Le richieste trovate nei log possono essere le proprie: prima di chiamarle download, si
+  confronta l'IP con quello pubblico della macchina.
+
 ## 3. fail2ban si mette sempre
 
 **Su ogni macchina esposta a Internet fail2ban ci va, e ce lo si mette la prima volta che ci si
