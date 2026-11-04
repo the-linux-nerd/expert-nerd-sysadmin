@@ -16,6 +16,7 @@
 # Legge soltanto: niente apt-get update, niente lock ( la simulazione usa Debug::NoLocking ).
 
 MODO=${1:-tutto}
+set -f  # le voci della blacklist ( php.*, nginx* ) non vanno espanse come glob
 CACHE="${HOME:?}/.claude/.nerd-esclusi"
 
 if [ "$MODO" = "hook" ] && [ -n "$( find "$CACHE" -mmin -60 2>/dev/null )" ]; then
@@ -31,10 +32,11 @@ riga() { OUT="$OUT$*
 if command -v apt-get >/dev/null 2>&1; then
   SIM=$( LC_ALL=C apt-get -s -o Debug::NoLocking=1 dist-upgrade 2>/dev/null | grep '^Inst ' )
   # nome e origine: "Inst php7.1-zip [7.1.33-1] (7.1.33-2 cloudpanel:bullseye [amd64])"
-  NO=$( echo -n "$SIM" | sed -nE 's/^Inst ([^ ]+) .*\([^ ]+ ([^ ]+).*/\1 \2/p' )
+  NO=$( echo -n "$SIM" | sed -nE 's/^Inst ([^ ]+) .*\([^ ]+ ([^ ,]+).*/\1 \2/p' )
   BL=$( apt-config dump 2>/dev/null | sed -n 's/^Unattended-Upgrade::Package-Blacklist:: "\(.*\)";/\1/p' )
   TOT=$( echo -n "$NO" | grep -c . )
-  SEC=$( echo -n "$NO" | awk '$2 ~ /-security/' | grep -c . )
+  # sulla riga intera: l'origine -security puo' essere la seconda ( "Debian:13/stable, Debian-Security:13/stable-security" )
+  SEC=$( echo -n "$SIM" | grep -ci 'security' )
   # le voci della blacklist sono espressioni regolari sul nome, ancorate all'inizio
   NBL=0
   for p in $BL; do
