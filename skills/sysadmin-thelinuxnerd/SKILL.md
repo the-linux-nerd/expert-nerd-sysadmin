@@ -118,6 +118,12 @@ Questa skill è il **metodo**, e vale su qualunque macchina. Quello che invece c
 macchina — a cosa serve, cosa espone, quali decisioni sono già state prese e vanno rispettate —
 sta in **`/root/READ.md`**, accanto agli altri file di servizio.
 
+I **file di servizio canonici in `/root`** sono questi, e sono **l'unica eccezione** alla regola
+che nella radice di `/root` non si lasciano file: `READ.md` ( fatti della macchina ), `TODO.md`
+( rami aperti ), `CHAT.md` ( stato con le persone ), `CLAUDE.md` ( istruzioni ), `root.journal`
+( eventi, via `va.log.journal.sh` ). Se uno manca e serve, **si crea lì**, senza chiedere: non è
+un file "di comodo". Tutto il resto va in scratchpad, `/var/backups/<data-motivo>/` o `/root/var/`.
+
 ⚠ **Si legge prima di concludere che qualcosa è un problema.** Metà dei "problemi" che si trovano
 in un giro di diagnosi sono scelte consapevoli di chi amministra la macchina: una versione tenuta
 indietro apposta, uno swap che non si mette, un servizio lasciato com'è per non rompere i client.
