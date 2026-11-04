@@ -227,6 +227,39 @@ serviva: quell'user-agent prendeva già 403 da nginx.
 - **Ogni blocco porta data e motivo nel commento**, e si decide subito se è temporaneo: un
   blocco d'emergenza non reso persistente sparisce al riavvio, uno persistente resta per sempre.
 
+### Un repository dentro la document root
+
+**Misurato il 04/11/2026**: su un web server con tre deploy sotto git, `/.git/HEAD` e `/.git/config`
+rispondevano **200**. Nessuna regola li chiudeva perché nessuno ci aveva pensato, e i log dicevano
+che altri ci avevano pensato: da sette IP diversi in otto giorni, **l'intero repository scaricato**,
+fino a 5,9 GB per volta, con dentro le credenziali del database e migliaia di allegati con dati di
+clienti. Si scopre solo cercando nell'access log `"GET /.git/`, e i 200 vanno contati per IP e per byte.
+
+- **Prima di mettere sotto git un deploy si chiude `.git` nel web server, per tutti i siti**: una
+  regola globale, non un `.htaccess` per sito, con un **404** e non un 403, per non confermare che c'e':
+  `RedirectMatch 404 "(?i)/\.git(/|$|ignore$|attributes$|modules$)"` più un `<DirectoryMatch
+  "/\.git(/|$)">` con `Require all denied`. Lo stesso vale per `.svn`, `.hg`, `.env`.
+- **La verifica è da fuori**: `curl -o /dev/null -w '%{http_code}' https://<sito>/.git/HEAD` su ogni
+  sito, e insieme la home a 200, per sapere che la regola non ha preso troppo.
+- **Le credenziali non vanno nel repository.** Un `config` con le password committato le espone a
+  chiunque legga il repo, oggi o fra dieci anni, e ruotarle non le toglie dalla storia: prima del primo
+  commit si decide quali file restano fuori ( `.gitignore` più un esempio senza valori ).
+
+### Ruotare una password usata da un servizio vivo
+
+**Successo il 04/11/2026**: uno script cambiava la password sul database e poi la scriveva nei file
+di configurazione, con un controllo di coerenza **in mezzo**. Il controllo era sbagliato, lo script si
+è fermato dopo il cambio e prima della scrittura, e la password nuova esisteva solo nella sua memoria:
+**3 minuti e mezzo** di sito fermo, con un utente al lavoro, e una seconda rotazione per rimediare.
+
+- **Fra il cambio sul server e la scrittura nei client non ci sono controlli che possano fermarsi**:
+  tutte le verifiche si fanno **prima** ( quanti file, quante occorrenze, che nessun altro la usi ), poi
+  il cambio e la scrittura uno dietro l'altro.
+- **La password nuova si salva prima di usarla**, in un file leggibile solo da root nella cartella di
+  lavoro: se qualcosa si ferma a metà, la si riprende invece di doverla rigenerare.
+- **Si verifica l'effetto, non il comando**: login con la nuova, login rifiutato con la vecchia, e
+  l'error log del servizio per gli `Access denied` dei minuti successivi.
+
 ## 3. fail2ban si mette sempre
 
 **Su ogni macchina esposta a Internet fail2ban ci va, e ce lo si mette la prima volta che ci si
