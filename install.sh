@@ -51,7 +51,8 @@ done
 echo "== bin =="
 for f in "$CD"/bin/*; do
   metti "$f" "$DEST/bin/$( basename "$f" )"
-  fai "chmod +x '$DEST/bin/$( basename "$f" )'"
+  # solo se serve: un chmod rifatto a ogni giro gonfia il conteggio delle operazioni
+  [ -x "$DEST/bin/$( basename "$f" )" ] || fai "chmod +x '$DEST/bin/$( basename "$f" )'"
 done
 
 echo "== memoria =="
@@ -99,8 +100,12 @@ fi
 
 echo "== hook anti-segreti del repository =="
 if [ -d "$CD/.git" ]; then
-  fai "git -C '$CD' config core.hooksPath .githooks"
-  echo "  + pre-commit attivo"
+  if [ "$( git -C "$CD" config --get core.hooksPath )" = ".githooks" ]; then
+    echo "  = pre-commit ( gia' attivo )"
+  else
+    echo "  + pre-commit attivo"
+    fai "git -C '$CD' config core.hooksPath .githooks"
+  fi
 else
   echo "  ( non e' un clone git: hook saltato )"
 fi
