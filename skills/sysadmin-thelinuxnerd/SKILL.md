@@ -1,6 +1,6 @@
 ---
 name: sysadmin-thelinuxnerd
-description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** , che **SSH accetta solo chiavi** e che **gli aggiornamenti di sicurezza si applicano da soli e si verificano a ogni giro** ( "la macchina è aggiornata?", unattended-upgrades, riavvio pendente ), senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi.
+description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** , che **SSH accetta solo chiavi** e che **gli aggiornamenti di sicurezza si applicano da soli e si verificano a ogni giro** ( "la macchina è aggiornata?", unattended-upgrades, riavvio pendente ), senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi. Alla fine di ogni lavoro la skill si migliora da sola con quello che si è imparato ( commit nel repository ).
 ---
 
 # Amministrazione di sistema, come la fa TheLinuxNerd
@@ -39,6 +39,59 @@ repo c'è di nuovo e ci si aggiorna, prima di tutto il resto:
   dopo: il file `$S` si tocca solo quando il controllo è riuscito.
 - Se il clone non sta in `~/thelinuxnerd`, lo si trova con
   `git -C <cartella> remote get-url origin` e lo si segnala: l'installazione standard è quella.
+
+## Alla fine di ogni lavoro: la skill impara
+
+Il metodo è **l'esperienza di tutte le macchine messa insieme**: ogni sessione che ci lavora la
+legge all'inizio, e **alla fine la restituisce migliorata**. Detto da Fabio il 04/11/2026: la skill
+si migliora costantemente con l'esperienza di ogni capitano. Una lezione che resta in una
+conversazione, o nel `/root/READ.md` di una macchina sola, le altre macchine la ripagano da capo.
+
+**Prima della risposta di chiusura di ogni lavoro amministrativo o di sicurezza**, la domanda è una:
+
+> **Che cosa ho imparato qui che un'altra macchina pagherebbe di nuovo?**
+
+Una diagnosi sbagliata prima di quella giusta, un comando che mentiva, una verifica che mancava, un
+numero che ha smentito una regola, uno script che non ha fatto quello che doveva. Se c'è, **va nel
+repository nello stesso lavoro**, non "dopo":
+
+| cosa si è imparato | dove va |
+|---|---|
+| un fatto di **questa** macchina ( a cosa serve, cosa è già deciso ) | `/root/READ.md`, non qui |
+| un modo di ragionare, una trappola, una verifica | il punto giusto di questo `SKILL.md` |
+| il dettaglio lungo di un caso ( intrusione, takeout ) | `references/` |
+| un controllo che si rifà a mano ogni volta | uno script in `scripts/`, o `triage.sh` / `hunt.sh` |
+| una regola fissa, da non ridiscutere | una memoria `memory/nerd-*.md` |
+
+Come si scrive, perché la skill resti leggibile e non diventi un diario:
+
+- **col numero e la data**: *"misurato il 03/11/2026: 50.632 IP distinti"*, non *"a volte gli
+  attacchi sono distribuiti"*. È il numero che convince la sessione dopo a non rifare l'errore;
+- **anonimo**: niente hostname, IP, domini o nomi di clienti — il repository si diffonde su tutte le
+  macchine, e il `pre-commit` ferma solo i segreti evidenti. *"un web server in produzione"*,
+  *"un sito WordPress dietro un pannello"*;
+- **correggere vince su aggiungere**: se la lezione smentisce una riga, **si cambia quella riga**,
+  non se ne aggiunge una accanto che la contraddice. Se un punto è cresciuto troppo, lo si accorcia
+  spostando il racconto in `references/`;
+- **una lezione, un commit**, col messaggio `<cosa>: <perché>`, senza il nome della macchina.
+
+La procedura, nel clone standard:
+
+    cd ~/thelinuxnerd && git pull -q --ff-only     # prima si parte dall'ultima versione
+    # ... modifica ...
+    git add -A && git commit -m "<cosa>: <perché>" && git push -q && ./install.sh
+
+- ⚠ **Se il `push` viene rifiutato perché il repo è andato avanti**, `git pull --rebase` e di nuovo
+  `push`; un conflitto si risolve leggendo le due versioni, **mai** con `--force`.
+- ⚠ **Se la macchina non ha le credenziali per pushare**, la lezione non si perde: si manda la
+  patch ( `git format-patch -1 --stdout` ) al generale con `claude-posta.py manda --a generale`, che
+  la applica e la pusha. Il commit locale si toglie dopo, quando il `pull` lo riporta.
+- Una modifica fatta direttamente nei file installati in `~/.claude/` **si perde** al prossimo
+  `install.sh`: si fa sempre nel clone.
+
+Nella risposta di chiusura c'è sempre una riga che lo dice: `skill: migliorata ( <hash>, <cosa> )`,
+oppure `skill: niente da aggiungere`. Senza quella riga il lavoro non è chiuso: è proprio il passo
+che si salta quando si ha fretta, ed è quello che fa crescere il metodo.
 
 ## Prima di cominciare: calabash
 
@@ -310,7 +363,7 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    dire che il meccanismo automatico non funziona, e va capito perché;
    ⚠ **i pacchetti che il giro automatico scarta ogni giorno sono il caso peggiore**: il log dice
    *"non viene aggiornato perché un pacchetto correlato non viene aggiornato o a causa di
-   apt_preferences"* ( visto su camera-max il 04/11/2026, `libgl1-amber-dri` ), il resto passa, e
+   apt_preferences"* ( visto su un desktop il 04/11/2026, `libgl1-amber-dri` ), il resto passa, e
    quel pacchetto resta scoperto per sempre senza che nessun conteggio di errori salga. Si
    cercano nel log a ogni giro, e ognuno si capisce: dipendenza nuova da installare a mano, pin,
    hold;

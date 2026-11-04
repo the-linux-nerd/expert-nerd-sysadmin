@@ -41,6 +41,9 @@ prima sessione di Claude su quella macchina, poi basta rilanciare `install.sh`.
 ## Aggiornare il metodo
 Il bello di questo approccio è che crea un'esperienza condivisa fra le macchine amministrate; quando
 serve si modifica **qui**, si committa, e sulle altre macchine `git pull && ./install.sh`.
+⚠ **Non è facoltativo**: alla fine di ogni lavoro amministrativo o di sicurezza la sessione si chiede
+cosa ha imparato che un'altra macchina pagherebbe di nuovo, e lo committa qui ( regola e procedura
+nella sezione *"Alla fine di ogni lavoro: la skill impara"* della skill ).
 La skill lo fa da sola: all'inizio di un lavoro, se l'ultimo controllo ha più di sette giorni,
 fa `fetch`, `pull --ff-only` e `install.sh`.
 
