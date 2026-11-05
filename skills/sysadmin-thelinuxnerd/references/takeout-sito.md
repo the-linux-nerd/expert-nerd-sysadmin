@@ -39,6 +39,19 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   scrive `/etc/mysql.conf.nuovo` in umask 077, si prova `select 1`, e solo se riesce si sostituisce
   il vecchio ( copia prima in `/root/` ). La password nel sqlite di CloudPanel è cifrata: non serve.
 
+- **Il database su un'altra macchina**: il censimento cerca i database solo in CloudPanel, in
+  `wp-config.php` e in `.env`. Un'applicazione con la configurazione altrove ( un `config.json`, un
+  database su un server dedicato ) esce con *"nessun database trovato"*, e quel database va salvato a
+  mano. Visto il 05/11/2026 su un gestionale legacy: dump fatto **sul server del database** con le sue
+  credenziali di amministrazione. L'utente dell'applicazione non bastava: `mysqldump --routines` si è
+  fermato su *insufficient privileges to SHOW CREATE FUNCTION*, perché le funzioni erano 139, e ha
+  lasciato un file a metà. Si controlla `-- Dump completed` in coda, e che `CREATE TABLE` più
+  `CREATE VIEW` tornino col conteggio di `information_schema.tables`. Il file degli utenti a mano deve
+  finire con `-- Grants completed`, sennò `verify` lo dà troncato;
+- **il takeout fatto sulla macchina stessa** ( `HOST` = `127.0.0.1` ): il controllo DNS confronta con
+  `127.0.0.1` e scrive *"nomi DNS che puntano qui: 0"* anche quando puntano lì. Il DNS si guarda a mano
+  contro l'IP pubblico.
+
 ## Salvataggio e verifica
 
     va.takeout.pull.sh HOST CARTELLA [PERCORSI EXTRA]
