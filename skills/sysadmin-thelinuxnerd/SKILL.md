@@ -228,6 +228,12 @@ servono una regola sul percorso che costa ( lì era la paginazione profonda ) e 
    servizio di rete si paga con la macchina irraggiungibile.
 3. **`reload`, non `restart`**, quando il servizio è quello da cui si è connessi. Il reload di
    sshd non butta giù le sessioni aperte; il restart è un rischio che non serve correre.
+   ⚠ **Un reload non è sempre gentile.** php-fpm col default `process_control_timeout = 0`
+   **uccide le richieste in corso** a ogni reload: il 05/11/2026 ha interrotto un cron che teneva
+   un lock dei task per 10 minuti, e il sito ha dato 500 per 9 minuti. Prima di ricaricare un
+   servizio che esegue lavoro lungo, si mette il timeout ( `process_control_timeout = 120s` ) e si
+   ricarica quando i lock dei job ( `flock` in `/var/lock` ) sono liberi. E le prove "prima/dopo"
+   sulle URL più frequenti **escludono gli endpoint di cron e dei task**: chiamarli è eseguirli.
 4. **Modifica minima.** Si cambia la riga che risolve il problema misurato, non si riscrive il
    file "già che ci siamo": un file riscritto rende impossibile capire, il mese dopo, quale
    modifica ha causato cosa.
