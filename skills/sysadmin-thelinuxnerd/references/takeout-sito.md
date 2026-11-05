@@ -24,9 +24,12 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   `scheda.txt`, `atteso.txt` ( gli archivi da produrre ), `meta.txt` e le `.list` dei file.
 - ⚠ **Il database può non stare sulla macchina del sito.** Cerca i database in CloudPanel, in
   `wp-config.php`, `.env` e nel `src/config.json` dei deploy glisweb; quelli con un host diverso da
-  `localhost` li elenca con l'host e li segnala negli avvisi, ma `va.takeout.pull.sh` **non li salva**:
-  vanno salvati a mano dalla macchina del database. Misurato il 05/11/2026 su un deploy glisweb: prima
-  della correzione lo script diceva "nessun database trovato", con il database su un server MySQL a parte.
+  `localhost` li prova **dalla macchina del sito con le credenziali del sito** ( per glisweb utente e
+  password stanno in `src/shadow.json`, non in `config.json` ): quelli che rispondono diventano archivi
+  `remoto.HOST.DB.sql.gz`, che `va.takeout.pull.sh` scarica da lì senza che la password lasci la
+  macchina ( opzioni passate con `<(...)`, mai sulla riga di comando ). Quelli che non rispondono restano
+  avvisi, da salvare a mano se sono ancora in uso. Utenti e grant dei database remoti non si salvano:
+  stanno sul server del database.
 - Con `HOST` = `127.0.0.1` i nomi DNS si confrontano anche con gli indirizzi che la macchina dichiara
   ( interfacce e IP pubblico dai metadati del cloud ): prima risultavano tutti "altrove".
 - Archivi attesi: `home.UTENTE.tar.gz` ( o `var.www.SITO.tar.gz` ), `sito.SITO.config.tar.gz`
@@ -47,15 +50,22 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   scrive `/etc/mysql.conf.nuovo` in umask 077, si prova `select 1`, e solo se riesce si sostituisce
   il vecchio ( copia prima in `/root/` ). La password nel sqlite di CloudPanel è cifrata: non serve.
 
-- **Il database su un'altra macchina**: il censimento cerca i database solo in CloudPanel, in
-  `wp-config.php` e in `.env`. Un'applicazione con la configurazione altrove ( un `config.json`, un
-  database su un server dedicato ) esce con *"nessun database trovato"*, e quel database va salvato a
-  mano. Visto il 05/11/2026 su un gestionale legacy: dump fatto **sul server del database** con le sue
-  credenziali di amministrazione. L'utente dell'applicazione non bastava: `mysqldump --routines` si è
-  fermato su *insufficient privileges to SHOW CREATE FUNCTION*, perché le funzioni erano 139, e ha
-  lasciato un file a metà. Si controlla `-- Dump completed` in coda, e che `CREATE TABLE` più
-  `CREATE VIEW` tornino col conteggio di `information_schema.tables`. Il file degli utenti a mano deve
-  finire con `-- Grants completed`, sennò `verify` lo dà troncato;
+- **L'utente dell'applicazione non legge tutto il suo database.** Misurato il 05/11/2026 su tre
+  deploy: `mysqldump --routines` si ferma su *insufficient privileges to SHOW CREATE FUNCTION* ( 139
+  funzioni su un gestionale, 48 routine su un altro, 7 su un terzo ) e lascia un file a metà. Il
+  censimento prova prima eventi e routine: quelle illeggibili si saltano **dichiarandolo** negli avvisi,
+  e se servono complete il dump si fa **sul server del database** con le sue credenziali di
+  amministrazione ( `--defaults-file=/etc/mysql/debian.cnf` su Debian ). Si controlla `-- Dump
+  completed` in coda, e che `CREATE TABLE` più `CREATE VIEW` tornino col conteggio di
+  `information_schema.tables`. Il file degli utenti a mano deve finire con `-- Grants completed`,
+  sennò `verify` lo dà troncato;
+- **una vista rotta ferma il dump**: *View ... references invalid table(s) or column(s)* ( 1356 ), visto
+  su un deploy il 05/11/2026. `--force` lo farebbe passare saltando la vista in silenzio: non si usa, il
+  KO resta e la vista si corregge o si toglie nel progetto, decisione di chi lo segue;
+- **due server con lo stesso indirizzo, lo stesso database e password diverse**, in un `config.json`
+  glisweb: una era vecchia, e solo il server del profilo di produzione entrava. Le credenziali si
+  scelgono per server, non per indirizzo, e un database si dà per irraggiungibile solo se non risponde
+  con nessuno;
 - **il takeout fatto sulla macchina stessa** ( `HOST` = `127.0.0.1` ): il controllo DNS confronta con
   `127.0.0.1` e scrive *"nomi DNS che puntano qui: 0"* anche quando puntano lì. Il DNS si guarda a mano
   contro l'IP pubblico.
