@@ -307,6 +307,13 @@ di configurazione, con un controllo di coerenza **in mezzo**. Il controllo era s
   lavoro: se qualcosa si ferma a metà, la si riprende invece di doverla rigenerare.
 - **Si verifica l'effetto, non il comando**: login con la nuova, login rifiutato con la vecchia, e
   l'error log del servizio per gli `Access denied` dei minuti successivi.
+- **"Che nessun altro la usi" vuol dire su tutte le macchine, non solo su questa.** Un database
+  condiviso fra più server ha utenti condivisi: il 04/11/2026 una rotazione ha aggiornato il sito della
+  macchina su cui si lavorava, mentre lo stesso utente lo usava anche un deploy su un altro server. Gli
+  import di quel deploy sono rimasti fermi **20 ore**, e dall'altra parte la si è letta come una
+  possibile intrusione. Prima del cambio si cerca l'utente nelle config di **ogni** client del
+  database ( e se non si vedono tutti, si chiede chi altro lo usa ); dopo, si guarda l'error log anche
+  di quei client.
 
 ### Le copie lasciate accanto all'originale si cercano dal web, non dal disco
 
