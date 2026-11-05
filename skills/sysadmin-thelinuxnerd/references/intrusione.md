@@ -130,7 +130,7 @@ Quello che ha funzionato, in quest'ordine:
 
 1. **si blocca l'uscita verso i server dell'attaccante** con una regola di firewall **in uscita**,
    prima di ogni altra cosa: l'impianto resta vivo ma sordo, e non riceve l'ordine di reagire;
-2. **si copiano le evidenze in una cartella dell'incidente**, con una sottocartella per famiglia
+2. **si copiano le evidenze nella cartella dell'incidente**, `/root/incidenti/AAAAMMGG-nome/` ( mai in `/tmp`, vedi il punto 0-bis della skill ), con una sottocartella per famiglia
    ( impianto di sistema, backdoor del pannello, config infette, payload decodificato ) e nomi che
    conservano il percorso originale — `_usr_lib_...` — perché dopo qualche giorno "quel file" non si
    sa più dov'era. `stat` completo di ogni file, prima di toccarlo;

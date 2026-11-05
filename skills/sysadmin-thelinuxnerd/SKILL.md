@@ -132,6 +132,39 @@ Riproporle ogni volta è rumore, e fa perdere credibilità alle segnalazioni ver
 Se `/root/READ.md` non c'è, vale la pena proporre di crearlo alla fine del primo giro serio:
 è lì che si sedimenta quello che altrimenti si riscopre da capo ogni sessione.
 
+## 0-bis. Dove si scrivono i file: le cartelle canoniche di `/root`
+
+Ogni cosa che si scrive su una macchina ha **un posto solo**, e la sessione dopo la ritrova lì
+senza doverla cercare. La radice di `/root` non è un deposito: ci stanno i quattro file di
+servizio e le cartelle di questa tabella, nient'altro.
+
+| cosa | dove |
+|---|---|
+| fatti della macchina e decisioni prese | `/root/READ.md` |
+| lavoro aperto | `/root/TODO.md` |
+| cosa è stato fatto e perché | `/root/DONE.md` |
+| istruzioni per la sessione di amministrazione | `/root/CLAUDE.md` |
+| **un incidente**: rapporto, cronologia, evidenze con lo `stat`, log, output di chkrootkit / rkhunter / scanner | **`/root/incidenti/AAAAMMGG-nome/`**, con la data dell'incidente, non del giorno in cui lo si scopre |
+| file tolti dai siti perché sospetti | `/root/quarantena/<sito>/`, percorso originale conservato, non eseguibili, con `MANIFEST.sha256` e `LEGGIMI.txt` |
+| siti o versioni dismesse in attesa di essere scaricate | `/root/old.sites/` |
+| schede del takeout | `/root/takeout/` ( punto 12 ) |
+| il clone di questa skill | `/root/thelinuxnerd/` |
+| copia di sicurezza di una config o di un file prima di riscriverlo | `/var/backups/AAAAMMGG-motivo/`, con `va.bak.sh` |
+| takeout di una macchina | `/var/backups/NOME/AAAAMMGG-takeout/` |
+| appoggio, prove, output intermedi | la scratchpad della sessione o `/tmp`: **solo cose che si possono perdere** |
+
+⚠ **Un rapporto o un'evidenza non passano mai da `/tmp`.** Si scrivono **subito** nella cartella
+canonica, anche lo script che li produce scrive lì, non "in `/tmp` e poi li sposto". Misurato il
+03/11/2026: il rapporto d'indagine di un'intrusione ( chkrootkit, rkhunter, clamscan, debsums e il
+report finale, con la password del kit dell'attaccante ) è stato scritto in `/tmp/web02-forense.XXXX/`
+da un `mktemp -d`, ed è rimasto lì due giorni, a un riavvio dal perderlo, finché l'amministratore non
+ha chiesto di metterlo al sicuro. `/tmp` si svuota al riavvio, `systemd-tmpfiles` lo pota, e dopo
+un incidente un riavvio è proprio quello che si fa.
+
+⚠ **Una cartella fuori tabella si sistema, non si aggiunge.** Se in `/root` si trova qualcos'altro,
+lo si porta al suo posto ( una copia di `authorized_keys` è una copia di sicurezza: `/var/backups` ),
+si aggiornano i riferimenti in READ, TODO, DONE e nelle memorie, e se non ha un posto si chiede.
+
 ## 1. Prima si misura, e si misura per davvero
 
 La diagnosi a orecchio è l'errore che costa di più, perché porta a intervenire sulla cosa
@@ -639,7 +672,7 @@ plugin e webroot perfettamente integri.
 per un errore dell'attaccante, ma la webshell nella stessa cartella è stata eseguita lo stesso con
 una richiesta diretta: un file PHP raggiungibile via HTTP è attivo, che WordPress lo consideri tale
 o no. Si sposta fuori dalla document root togliendo ogni permesso — e **prima** si copia tutto in
-una cartella dell'incidente ( evidenze, log, cosa si è fatto e quando ), perché la relazione si
+la cartella dell'incidente, `/root/incidenti/AAAAMMGG-nome/` ( evidenze, log, cosa si è fatto e quando ), perché la relazione si
 scrive dopo, e senza quella non si impara niente.
 
 **nginx: quello che va in uno snippet comune a tutti i siti**, non sito per sito, perché la
@@ -687,7 +720,7 @@ caccia in sola lettura la fa `scripts/hunt.sh`.
 
 ⚠ **Non si uccide niente prima di aver bloccato l'uscita e cercato il guardiano.** L'ordine è:
 regola di firewall **in uscita** verso chi comanda l'impianto; evidenze copiate nella cartella
-dell'incidente, con lo `stat` completo; persistenza disarmata ( timer, service, generatori systemd,
+dell'incidente ( `/root/incidenti/AAAAMMGG-nome/`, punto 0-bis ), con lo `stat` completo; persistenza disarmata ( timer, service, generatori systemd,
 regole udev, cron ); flag immutabili tolti e file rimossi; **per ultimi** i processi. In quel caso,
 alla prima uccisione l'impianto è rinato — ed è così che si è trovato lo strato di un anno prima.
 Se qualcosa torna, non è un fallimento: è un'informazione.
@@ -695,6 +728,14 @@ Se qualcosa torna, non è un fallimento: è un'informazione.
 ⚠ **Il lavoro non finisce alla prima cosa trovata.** Quattro strati in una sera, e ogni volta
 sembrava finita. Dopo ogni ritrovamento la domanda è *"questo come ci è arrivato?"*, finché la
 risposta è "da qui" e non "boh".
+
+⚠ **Un archivio tolto non vuol dire un kit tolto: si cerca anche la sua copia già estratta.** Il
+03/11/2026 si è messo in quarantena l'archivio auto-estraente di una backdoor ( tor + dropbear sulla
+50022 ) cercando le firme delle webshell PHP; due giorni dopo, una scansione per tipo di file ha
+trovato **accanto, in una cartella nascosta, lo stesso kit già estratto**: binari ELF, librerie,
+torrc, finiti pure nel primo commit del deploy. Dentro una document root si cercano **i binari ELF
+e le cartelle che iniziano con un punto**, non solo il PHP, e ogni pezzo trovato si cerca poi su
+tutta la macchina per impronta, dimensione e nome.
 
 **Si cerca per tecnica, non per nome.** Gli indicatori di un attaccante scadono in mesi, i
 nascondigli no: eseguibili nelle directory di sistema che nessun pacchetto dichiara ( chiesto a
