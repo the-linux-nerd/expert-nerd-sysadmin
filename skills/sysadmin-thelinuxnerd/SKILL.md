@@ -516,6 +516,7 @@ Per ogni cosa messa in piedi, la domanda è: **qual è la prova che funziona?**
 | uno scanner di malware | un file di prova che deve trovare: zero riscontri può voler dire che non sta guardando. E firme aggiornate: uno scanner che non può scaricarle è teatro, e si spegne **dichiarandolo** |
 | una regola di auditd | che `audit.log` copra ore, non minuti: in `ls -la /var/log/audit/` gli archivi **timbrati tutti allo stesso minuto** vogliono dire che una regola registra rumore e cancella il resto |
 | un backup | il ripristino di prova, qui sotto |
+| blocco di percorsi applicativi ( `.htaccess`, WAF ) | **prima** del blocco, i log di accesso: chi li chiama con un `Referer` interno è il gestionale stesso, non uno scanner; **dopo**, la prova da un IP esterno ( l'IP del server stesso passa le eccezioni locali ) con e senza sessione. Il 26/10/2026 il blocco dei `/task/` di un deploy ha fermato la numerazione fatture, chiamata via AJAX; la cliente se n'è accorta 9 giorni dopo |
 
 Nel caso originario la verifica di fail2ban è stata `fail2ban-regex` sulle ultime 3000 righe di
 `auth.log`: **361 agganciate**. Senza quel numero si sarebbe potuto dire soltanto "l'ho
