@@ -60,8 +60,11 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   `information_schema.tables`. Il file degli utenti a mano deve finire con `-- Grants completed`,
   sennò `verify` lo dà troncato;
 - **una vista rotta ferma il dump**: *View ... references invalid table(s) or column(s)* ( 1356 ), visto
-  su un deploy il 05/11/2026. `--force` lo farebbe passare saltando la vista in silenzio: non si usa, il
-  KO resta e la vista si corregge o si toglie nel progetto, decisione di chi lo segue;
+  su un deploy il 05/11/2026. `--force` lo farebbe passare saltando la vista in silenzio: su un sito vivo
+  non si usa, il KO resta e la vista si corregge o si toglie nel progetto, decisione di chi lo segue. Su
+  un sito **dismesso** nessuno la correggerà più: si fa il dump con `--force` e un nome che lo dichiara
+  ( `DB.forzato.sql.gz` ), lo si dice nel README dell'archivio e si contano le tabelle contro
+  `information_schema` ( visto il 05/11/2026: 248 tabelle su 248, la vista rotta salvata comunque );
 - **due server con lo stesso indirizzo, lo stesso database e password diverse**, in un `config.json`
   glisweb: una era vecchia, e solo il server del profilo di produzione entrava. Le credenziali si
   scelgono per server, non per indirizzo, e un database si dà per irraggiungibile solo se non risponde
