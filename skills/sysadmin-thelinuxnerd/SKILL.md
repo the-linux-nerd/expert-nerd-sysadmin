@@ -596,6 +596,12 @@ monitoraggio c'era e non è servito:
   più, e nessuno l'aveva riverificato. In un incidente il controllo ha visto l'infezione **in
   un'ora**; le persone l'hanno saputo **sei ore dopo**, e dall'avviso del plugin del sito, non da
   quello di sistema.
+- **Un rimedio d'emergenza che resta.** Per svuotare una coda di 12.540 messaggi ( bounce di
+  `www-data` ) la posta di root era stata mandata a `:blackhole:` in `/etc/aliases`; misurato il
+  05/11/2026, tre settimane dopo era ancora lì: circa 6 messaggi al giorno di cron e aggiornamenti
+  buttati, su una sola macchina della flotta. Si tappa il rubinetto che allaga ( lì `www-data` ),
+  non la posta di root; e a ogni giro si guarda dove va root ( `triage.sh` lo dice ), con una
+  prova che arriva e la busta nel dominio giusto ( punto 4 ).
 - **Dice sempre la stessa cosa.** Un controllo che segnalava 2 file fuori posto il 10 del mese ne
   segnalava 19 il 23: nessuno lo leggeva più, perché "è quello solito". Un allarme noto si
   risolve o si toglie; lasciarlo suonare insegna a ignorare anche quello vero. Una sentinella con la

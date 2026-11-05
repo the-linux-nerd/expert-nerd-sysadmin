@@ -145,6 +145,13 @@ H "COPIE CON LA DATA DOPO L'ESTENSIONE ( sfuggono ai glob, o ci finiscono dentro
 B=$( find /etc -regextype posix-extended -type f -regex '.*\.(conf|sh|php|cnf|ini|local)\.(bak|old|orig|save|[0-9]{6,})[^/]*' 2>/dev/null )
 echo "in /etc: $( echo -n "$B" | grep -c . )"; echo "$B" | head -5
 
+H "POSTA DI SISTEMA: DOVE FINISCE QUELLA DI ROOT ( SKILL.md, punto 5 )"
+if command -v exim >/dev/null 2>&1 || command -v sendmail >/dev/null 2>&1; then
+  grep -E '^(root|www-data):' /etc/aliases 2>/dev/null || echo "root senza alias in /etc/aliases ( resta locale? )"
+  grep -qE '^root:.*(:blackhole:|/dev/null)' /etc/aliases 2>/dev/null && echo "!! la posta di root viene BUTTATA: cron, aggiornamenti e allarmi non avvisano nessuno"
+  grep -v '^#' /etc/email-addresses 2>/dev/null | grep . | sed 's/^/busta riscritta: /'
+else echo "nessun MTA"; fi
+
 H "MODIFICHE RECENTI IN /etc ( 7 giorni )"
 find /etc -type f -mtime -7 2>/dev/null | grep -vE '/etc/(mtab|resolv.conf|adjtime|ld.so.cache)|/etc/letsencrypt/' | head -12
 echo
