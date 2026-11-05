@@ -293,6 +293,42 @@ clienti. Si scopre solo cercando nell'access log `"GET /.git/`, e i 200 vanno co
   chiunque legga il repo, oggi o fra dieci anni, e ruotarle non le toglie dalla storia: prima del primo
   commit si decide quali file restano fuori ( `.gitignore` più un esempio senza valori ).
 
+### Prima di pushare un repository su un remote
+
+**Misurato il 05/11/2026**, su 34 deploy da portare su GitHub: un `.gitignore` messo il giorno prima
+non toglie niente dalla storia, e in 11 repository la storia aveva ancora password MySQL vive,
+due chiavi private DKIM, 14 fatture e 3 preventivi di clienti finiti in `tmp/`.
+
+- **Si scansionano HEAD e storia** ( `git log --all -p` ) per tre cose: le password vive, confrontate
+  coi valori veri e riportate solo come vero/falso; le `PRIVATE KEY-----`; i documenti ( pdf, xls,
+  doc, msg ) nelle cartelle temporanee. ⚠ Le chiavi private stanno quasi sempre nei **fixture delle
+  librerie** ( tcpdf, i testdata delle API Google ): 8 repository su 8 scartati a torto da un filtro
+  troppo stretto. Si tolgono `_external/`, `vendor/`, `tests/` ed `examples/`, e quello che resta si
+  guarda: lì c'erano le chiavi DKIM vere in `etc/secret/`.
+- **Ripulire la storia senza `git-filter-repo`** ( che vuole git 2.22 o più ): `filter-branch
+  --index-filter 'git rm -r --cached --ignore-unmatch …'`, ma **su un clone `--mirror`**, mai nel
+  deploy vivo. Nel deploy filter-branch rifiuta se il working tree è sporco, e i contatori e i log che
+  il sito riscrive lo sono sempre; e alla fine fa un checkout che **cancella dal disco** i file appena
+  tolti dall'indice, cioè la config del sito. Dal mirror: `fetch` in un ref temporaneo, `update-ref`
+  del branch, `reset` ( mixed: tocca l'indice, non i file ), poi `reflog expire --expire=now --all` e
+  `gc --prune=now`. La prova è doppia: `rev-list --objects --all` non ha più quei percorsi, e
+  l'`md5sum` dei file su disco è uguale a prima.
+- Prima di tutto si copia l'intero `.git` in un backup datato, e si dice che quella copia **contiene
+  ancora i segreti**.
+
+⚠ **Uno script che fallisce dopo aver fatto il lavoro, se lo rilanci, lo rifà.** Il conteggio finale
+usciva con 1 ( `while read …; [[ … ]] && echo` sotto `pipefail` ), lo script terminava zitto, e
+sembrava fermo all'inizio. Il backup "parziale" è stato cancellato per ripartire, e conteneva la sola
+copia della storia originale. **Prima di buttare un intermedio si guarda se il lavoro c'è già**
+( `git log`, il file di destinazione ), e sotto `set -e` i conteggi e i controlli finali portano
+`|| true`.
+
+Due trappole della shell, viste nello stesso giro:
+- `ssh -T git@github.com` **esce sempre con 1**, anche quando l'autenticazione riesce: con `pipefail`
+  `ssh … | grep -q Hi` fallisce sempre. Si cattura l'output in una variabile e si confronta quella.
+- un `ssh` dentro `while read … done < elenco` **si mangia lo stdin** del ciclo, e il ciclo si ferma al
+  primo giro senza errori: `ssh -n`, o il ciclo su un altro descrittore ( `read -u3 … 3< elenco` ).
+
 ### Ruotare una password usata da un servizio vivo
 
 **Successo il 04/11/2026**: uno script cambiava la password sul database e poi la scriveva nei file
