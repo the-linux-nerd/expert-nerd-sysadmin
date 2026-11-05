@@ -17,10 +17,18 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
 
     va.takeout.site.inventory.sh HOST SITO [CARTELLA]
 
-- Gira sulla macchina che riceve il takeout e raggiunge il server via ssh a chiave; sul server scrive
-  solo `/root/takeout/sito.SITO/scheda.txt`.
+- Gira sulla macchina che riceve il takeout e raggiunge il server via ssh a chiave; sul server **non
+  scrive niente** ( dal 05/11/2026: prima creava `/root/takeout/sito.SITO/`, e quando il sito stava sulla
+  stessa macchina della sessione l'hook che vieta file nuovi nella radice di `/root` lo fermava ).
 - La cartella di default è `/var/backups/SITO/AAAAMMGG-takeout/`; dentro mette `inventario.md`,
-  `atteso.txt` ( gli archivi da produrre ), `meta.txt` e le `.list` dei file.
+  `scheda.txt`, `atteso.txt` ( gli archivi da produrre ), `meta.txt` e le `.list` dei file.
+- ⚠ **Il database può non stare sulla macchina del sito.** Cerca i database in CloudPanel, in
+  `wp-config.php`, `.env` e nel `src/config.json` dei deploy glisweb; quelli con un host diverso da
+  `localhost` li elenca con l'host e li segnala negli avvisi, ma `va.takeout.pull.sh` **non li salva**:
+  vanno salvati a mano dalla macchina del database. Misurato il 05/11/2026 su un deploy glisweb: prima
+  della correzione lo script diceva "nessun database trovato", con il database su un server MySQL a parte.
+- Con `HOST` = `127.0.0.1` i nomi DNS si confrontano anche con gli indirizzi che la macchina dichiara
+  ( interfacce e IP pubblico dai metadati del cloud ): prima risultavano tutti "altrove".
 - Archivi attesi: `home.UTENTE.tar.gz` ( o `var.www.SITO.tar.gz` ), `sito.SITO.config.tar.gz`
   ( vhost, pool, certificati, logrotate, crontab ), un `var.lib.mysql.DB.sql.gz` per database e
   `var.lib.mysql.users.DB.sql.gz` con gli utenti MySQL e i loro grant.
