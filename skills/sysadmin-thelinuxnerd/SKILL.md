@@ -707,6 +707,18 @@ cioè quelle che arrivano a PHP e MySQL. Due condizioni:
 La whitelist ( il server stesso, che chiama WordPress in loopback; i motori di ricerca; i lettori
 di feed dei partner ) si fa con un `geo` sull'header, e i feed conviene esentarli per percorso.
 
+**La posta dei siti: per DMARC conta il From, non la busta.** Misurato il 05/11/2026: con la busta
+già riscritta nel dominio del sito ( `sender_canonical` di postfix, SPF pass ), 8 mail in dieci giorni
+fallivano DMARC sul dominio dell'agenzia, perché WPForms ( riepilogo settimanale, notifiche ) e
+WooCommerce mettono nell'header `From:` l'`admin_email`, che era quello dell'agenzia su 35 siti su 36.
+Il pannello e la busta non lo vedono; si cercano con una query sulle opzioni ( `admin_email`,
+`woocommerce_email_from_address`, `wpforms_settings` ). Si chiude con un mu-plugin comune che filtra
+`wp_mail_from` a priorità `PHP_INT_MAX` ( dopo i plugin ) e tiene l'originale come `Reply-To`. Si prova
+**senza spedire niente**: un `wp eval-file` che aggancia `phpmailer_init`, stampa `From` e `Reply-To`
+e lancia un'eccezione. ⚠ Se `wp` fallisce con *"Composer detected issues in your platform"*, il PHP a
+riga di comando è più vecchio di quello del sito: `php8.3 $(command -v wp)`, e vuol dire che anche gli
+script notturni con `wp` su quel sito stanno fallendo.
+
 ⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate** ( 15 su un'altra, molte di macchine dismesse ), fra
 portatili e telefoni personali, senza un nome né una scadenza: una qualunque di quelle macchine
 persa è una porta aperta, ed è uno dei canali più plausibili della fuga di credenziali. Si
