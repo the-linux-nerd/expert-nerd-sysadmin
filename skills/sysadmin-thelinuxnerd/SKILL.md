@@ -518,7 +518,11 @@ repository di terze parti ( PHP di Sury, MariaDB, Node ). Al primo giro su una m
   e come**: va in `/root/READ.md`. Una riga *"nessuno"* è una risposta accettabile solo se è scritta
   e l'amministratore l'ha letta;
 - per WordPress vale il punto 6: con `DISALLOW_FILE_MODS` gli aggiornamenti li fa lo script
-  notturno, e **si verifica che giri** ( `wp core check-update`, `wp plugin list --update=available` );
+  notturno, e **si verifica che giri** ( `wp core check-update`, `wp plugin list --update=available` ).
+  ⚠ Misurato il 05/11/2026: l'updater scartava lo stderr di `wp` e leggeva l'output vuoto come
+  "gia' aggiornato"; su 4 siti su 35 `wp` andava in fatal col PHP di sistema più vecchio di quello
+  del sito, e i siti non si aggiornavano senza che il riepilogo lo dicesse. `wp` si lancia col PHP
+  del pool del sito, e un sito che `wp` non carica si conta come **fallito**, non come aggiornato;
 - i repository di terze parti si guardano come quello di sicurezza: se la loro chiave scade o il
   repository chiude, `apt` lo dice con un `W:` che nessuno legge.
 
