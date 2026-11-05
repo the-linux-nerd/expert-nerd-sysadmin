@@ -120,9 +120,9 @@ sta in **`/root/READ.md`**, accanto agli altri file di servizio.
 
 I **file di servizio canonici in `/root`** sono questi, e sono **l'unica eccezione** alla regola
 che nella radice di `/root` non si lasciano file: `READ.md` ( fatti della macchina ), `TODO.md`
-( rami aperti ), `CHAT.md` ( stato con le persone ), `CLAUDE.md` ( istruzioni ), `root.journal`
+( rami aperti ), `DONE.md` ( decisioni e perché ), `CHAT.md` ( stato con le persone ), `CLAUDE.md` ( istruzioni ), `root.journal`
 ( eventi, via `va.log.journal.sh` ). Se uno manca e serve, **si crea lì**, senza chiedere: non è
-un file "di comodo". Tutto il resto va in scratchpad, `/var/backups/<data-motivo>/` o `/root/var/`.
+un file "di comodo". Tutto il resto va nelle cartelle della tabella del punto 0-bis.
 
 ⚠ **Si legge prima di concludere che qualcosa è un problema.** Metà dei "problemi" che si trovano
 in un giro di diagnosi sono scelte consapevoli di chi amministra la macchina: una versione tenuta
@@ -135,7 +135,7 @@ Se `/root/READ.md` non c'è, vale la pena proporre di crearlo alla fine del prim
 ## 0-bis. Dove si scrivono i file: le cartelle canoniche di `/root`
 
 Ogni cosa che si scrive su una macchina ha **un posto solo**, e la sessione dopo la ritrova lì
-senza doverla cercare. La radice di `/root` non è un deposito: ci stanno i quattro file di
+senza doverla cercare. La radice di `/root` non è un deposito: ci stanno i file di
 servizio e le cartelle di questa tabella, nient'altro.
 
 | cosa | dove |
@@ -144,11 +144,14 @@ servizio e le cartelle di questa tabella, nient'altro.
 | lavoro aperto | `/root/TODO.md` |
 | cosa è stato fatto e perché | `/root/DONE.md` |
 | istruzioni per la sessione di amministrazione | `/root/CLAUDE.md` |
+| stato delle conversazioni con le persone | `/root/CHAT.md` |
+| eventi della macchina, via `va.log.journal.sh` | `/root/root.journal` |
 | **un incidente**: rapporto, cronologia, evidenze con lo `stat`, log, output di chkrootkit / rkhunter / scanner | **`/root/incidenti/AAAAMMGG-nome/`**, con la data dell'incidente, non del giorno in cui lo si scopre |
 | file tolti dai siti perché sospetti | `/root/quarantena/<sito>/`, percorso originale conservato, non eseguibili, con `MANIFEST.sha256` e `LEGGIMI.txt` |
 | siti o versioni dismesse in attesa di essere scaricate | `/root/old.sites/` |
 | schede del takeout | `/root/takeout/` ( punto 12 ) |
 | il clone di questa skill | `/root/thelinuxnerd/` |
+| materiale di lavoro di un giro da conservare, che non è un incidente né una copia di sicurezza | `/root/var/AAAAMMGG-scopo/` |
 | copia di sicurezza di una config o di un file prima di riscriverlo | `/var/backups/AAAAMMGG-motivo/`, con `va.bak.sh` |
 | takeout di una macchina | `/var/backups/NOME/AAAAMMGG-takeout/` |
 | appoggio, prove, output intermedi | la scratchpad della sessione o `/tmp`: **solo cose che si possono perdere** |
