@@ -604,6 +604,24 @@ ogni backup le domande sono quattro:
 
 Se l'ultima risposta è "mai", va nel `TODO.md` come rischio aperto, non come cosa fatta.
 
+⚠ **Un dump dei database è un backup solo se è fedele, completo e controllato.** Misurato il
+05/11/2026 su un server di database con 31 basi: l'ultimo dump completo aveva un anno, e lo script
+pensato per farlo passava da un export *ripulito* per i cloni di sviluppo ( via gli `AUTO_INCREMENT`,
+`DEFINER` riscritti ), non guardava il codice d'uscita di `mysqldump` dentro la pipe e appoggiava
+tutto in chiaro in `/tmp`. Quindi: `--single-transaction --routines --triggers --events --hex-blob`,
+un file per database, `PIPESTATUS` più la riga finale `-- Dump completed` come prova, impronte in un
+MANIFEST da ricontrollare dopo la copia.
+- **Una vista rotta ferma tutto il dump di quel database** ( errore 1356 ), e senza un controllo il
+  file troncato passa per buono. Al primo giro una base su tre provate era in quello stato. Si segnala
+  l'errore e si riesporta con `--force` in un file marcato come forzato: i dati sono salvi e il
+  problema non sparisce.
+- **La retention parte solo se ogni database ha i suoi dati**, ma un database forzato i dati li ha. Se
+  la retention aspetta un giro senza errori, una vista che resta rotta la blocca per sempre e il disco
+  si riempie.
+- **Il ripristino di prova su un'altra macchina si ferma sulle viste**, perché gli utenti `DEFINER`
+  non esistono lì: le tabelle e i conteggi tornano ( 248 su 248 ), le viste no. Si ripristinano prima
+  gli utenti ( il dump di `mysql` ), oppure si prova sul server di origine con un nome di prova.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
