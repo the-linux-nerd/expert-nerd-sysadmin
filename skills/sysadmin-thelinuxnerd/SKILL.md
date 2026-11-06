@@ -658,6 +658,12 @@ MANIFEST da ricontrollare dopo la copia.
   file troncato passa per buono. Al primo giro una base su tre provate era in quello stato. Si segnala
   l'errore e si riesporta con `--force` in un file marcato come forzato: i dati sono salvi e il
   problema non sparisce.
+- **Il dump deve seguire il database quando si sposta.** Misurato il 06/11/2026: un database spostato
+  su un altro server a inizio ottobre, e il dump notturno ancora puntato sul MySQL locale. Per **un mese**
+  `mysqldump` ha dato 1049 dentro una pipe senza `pipefail`, `gzip` ha scritto un file vuoto che passava
+  `gzip -t`, e la rotazione ha sostituito ogni notte i dump buoni con quelli vuoti. Il segno c'era: **tutti
+  i file della stessa dimensione al byte** ( 386 ). Lo script ora prende server e credenziali dalla config
+  dell'applicazione, fallisce con `pipefail`, e pota i vecchi dump solo dopo un dump riuscito.
 - **La retention parte solo se ogni database ha i suoi dati**, ma un database forzato i dati li ha. Se
   la retention aspetta un giro senza errori, una vista che resta rotta la blocca per sempre e il disco
   si riempie.
