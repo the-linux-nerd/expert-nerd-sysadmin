@@ -211,6 +211,12 @@ richiesta ciascuno, e nessun limite per IP l'avrebbe fermato. **La prima domanda
 distinti ha l'incidente?"**: se sono pochi serve un limite per IP, se sono decine di migliaia
 servono una regola sul percorso che costa ( lì era la paginazione profonda ) e la cache.
 
+**La memoria di un processo si misura col Pss, non con l'RSS.** Il 06/11/2026, per dimensionare
+`MaxRequestWorkers` di un apache prefork, l'RSS diceva 53 MB a processo e il Pss ( `smaps_rollup` ) 7 MB:
+il resto è memoria condivisa, contata una volta per processo. Con l'RSS il tetto sembrava 45 worker, col
+Pss era ben sopra 60. ⚠ Il caso peggiore però non è la media di oggi: se nel worker gira mod_php, il
+processo può crescere fino al `memory_limit`, e il conto va fatto anche su quello.
+
 ## 2. Prima di toccare una configurazione
 
 1. **Backup datato, con la data nel nome della cartella e non dopo l'estensione**:
