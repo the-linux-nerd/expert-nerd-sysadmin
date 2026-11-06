@@ -936,3 +936,12 @@ prima di cominciare.
 Per **un sito solo**, su CloudPanel ( `/home/UTENTE/` ) o classico ( `/var/www/SITO/` ), il censimento è
 `va.takeout.site.inventory.sh` e il resto non cambia: la procedura e le trappole già incontrate
 ( backup di CloudPanel, MySQL senza credenziali ) sono in **`references/takeout-sito.md`**.
+
+## 13. Apache: troubleshooting e ottimizzazione
+
+Quando un sito su Apache è giù, lento o risponde 403/500, o quando si dimensionano i worker, il
+riferimento è **`references/apache.md`**, e si apre prima di toccare la config. Le tre cose da sapere
+subito: **un buco nell'access log è la prova del down** ( Apache scrive la riga a fine richiesta, e
+`AH00161` lo scrive una volta sola per vita del processo padre ); **i worker si contano col Pss**, e
+con PHP-FPM il rischio di OOM sta nei pool, non in Apache; **`reload`, non `restart`**, e attenzione a
+monit che riavvia in silenzio.
