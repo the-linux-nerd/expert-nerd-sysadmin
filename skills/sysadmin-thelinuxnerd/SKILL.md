@@ -681,6 +681,13 @@ monitoraggio c'era e non è servito:
   lista di riferimento fotografata **un minuto prima** di installare gli strumenti li ha segnalati
   ogni quindici minuti per dodici ore: **un allarme ripetuto si chiude entro la giornata**, e le
   liste si verificano al momento del controllo, non si congelano.
+- **Avvisa senza secondo parere.** Misurato il 06/11/2026: un controllo di uptime su due server ha mandato
+  **123 mail in 17 ore**, 57 down su 61 visti da un server solo e mai confermati dall'altro, che pure li
+  controllava ma non consegnava la sua vista in tempo. La mail parte solo per un down **confermato** da un
+  secondo punto di osservazione; quello non confermato va nel registro, e il server rimasto senza secondo
+  parere avvisa una volta al giorno. ⚠ Prima di chiamarlo falso positivo si guarda l'access log del sito
+  nei minuti del down: lì due episodi su tre erano veri ( zero richieste servite, `MaxRequestWorkers`
+  pieno ), e la causa era il server, non il controllo.
 - **Costa più di quanto protegge.** AIDE puntato anche sui webroot: **dieci ore al 90% di CPU** su
   una macchina già carica. Una sorveglianza che degrada il servizio prima o poi qualcuno la spegne;
   allo strumento di sistema il perimetro di sistema.
