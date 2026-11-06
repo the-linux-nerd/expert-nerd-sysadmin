@@ -670,6 +670,15 @@ MANIFEST da ricontrollare dopo la copia.
 - **Il ripristino di prova su un'altra macchina si ferma sulle viste**, perché gli utenti `DEFINER`
   non esistono lì: le tabelle e i conteggi tornano ( 248 su 248 ), le viste no. Si ripristinano prima
   gli utenti ( il dump di `mysql` ), oppure si prova sul server di origine con un nome di prova.
+- **Una cartella copiata a mano nel datadir è un database per `SHOW DATABASES`, ma non per InnoDB.**
+  Trovato il 06/11/2026 su un MariaDB 10.3: una copia di file `.frm`/`.ibd` di un altro server, messa
+  nel datadir un anno e mezzo prima e di `root:root`, falliva ogni notte nel dump con l'errore 1932
+  *doesn't exist in engine*. Nessuno se n'era accorto finché il dump non è diventato severo. Prima si
+  controlla che nessun client la usi, poi si fa un `tar` della cartella fuori dal datadir. Il
+  `DROP DATABASE` va in tre passi: `chown -R mysql:mysql` ( se no, errore 6 *Permission denied* ),
+  `DROP` ( toglie le tabelle registrate e i `.frm`, ma si ferma con l'errore 39 *Directory not empty* ),
+  poi si spostano a mano gli `.ibd` rimasti, che InnoDB non conosce, e si rilancia il `DROP`. Gli `.ibd`
+  non si spostano mai **prima** del `DROP`: quelli registrati lascerebbero il dizionario sporco.
 
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
