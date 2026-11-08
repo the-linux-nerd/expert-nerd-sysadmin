@@ -608,6 +608,7 @@ Per ogni cosa messa in piedi, la domanda è: **qual è la prova che funziona?**
 | un servizio al boot | `systemctl is-enabled`, che è una domanda diversa da `is-active` |
 | un `limit_req` di nginx | una raffica di prova da un IP finto che deve prendere 429 dopo il burst, un IP in whitelist che deve passare tutto, **e la riga `limiting requests` nel log**. ⚠ Con `limit_req_log_level warn` e l'`error_log` al livello di default ( `error` ) i blocchi non si vedono: il limite lavora e nessuno lo sa |
 | un allarme nuovo | un modo `prova` che lo **dichiara nel testo** del messaggio. ⚠ Forzare la soglia a mano ( `SOGLIA=0` ) manda un allarme vero, indistinguibile da un'emergenza: è successo, e ha richiesto una smentita |
+| un allarme di uptime su molti siti | la caduta **di un server intero**, non di un sito solo: deve arrivare **una** mail quando il gruppo ( il deploy, il server ) passa da tutto su a giù, e una quando torna tutto su, col downtime; niente in mezzo. Misurato l'08/11/2026: 41 siti sullo stesso server esterno, tre cadute in un giorno, una mail per sito a noi e al referente del cliente |
 | un allarme | il messaggio **ricevuto**: si provoca la condizione una volta e si guarda il telefono, non il log dello script |
 | i certificati | `certbot renew --dry-run` che elenca **tutti** quelli attesi; il "success" del timer riguarda solo quelli che ha letto |
 | una correzione a uno script che si reinstalla da solo | il giro **dopo** quello atteso: il primo esegue ancora la copia vecchia, che poi installa la nuova |
