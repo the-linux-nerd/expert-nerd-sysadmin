@@ -356,6 +356,12 @@ di configurazione, con un controllo di coerenza **in mezzo**. Il controllo era s
   possibile intrusione. Prima del cambio si cerca l'utente nelle config di **ogni** client del
   database ( e se non si vedono tutti, si chiede chi altro lo usa ); dopo, si guarda l'error log anche
   di quei client.
+- **La password vecchia si sostituisce sulla riga dell'utente, non in tutto il file.** Misurato il
+  09/11/2026: in una config applicativa la stessa password compariva **3 volte**, su tre voci server di
+  utenti diversi. Una sostituzione globale della stringa avrebbe scritto la password nuova anche sulle
+  altre due voci, e le loro connessioni sarebbero cadute senza che nessun controllo sull'utente ruotato se
+  ne accorgesse. Prima si conta quante volte compare la vecchia nel file; dopo, un `diff` delle righe che
+  non riguardano l'utente deve uscire vuoto.
 
 ### Le copie lasciate accanto all'originale si cercano dal web, non dal disco
 
