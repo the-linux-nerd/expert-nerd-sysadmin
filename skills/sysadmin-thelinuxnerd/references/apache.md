@@ -95,6 +95,15 @@ processi prefork condividono quasi tutto.
   vhost filtrando i blocchi veri ( `at ARGS` / `at REQUEST_BODY` ) e scartando il rumore degli scanner;
   si corregge con un'esclusione **mirata** al campo ( `SecRuleUpdateTargetById <id> "!ARGS:/<campo>/"`
   nel file delle esclusioni dopo il CRS ), mai spegnendo la regola per tutti.
+- **Un 500 senza traccia dell'applicazione può essere ModSecurity.** Misurato il 09/11/2026 su un web
+  server con mod_security2 2.9.3: 176 risposte 500 in tre ore a degli scanner, e nessuna riga nel log
+  dell'applicazione. Ogni POST multipart **senza il boundary finale** prende 500 da ModSecurity prima di
+  arrivare a PHP ( `Multipart parsing error: Multipart: Final boundary missing`, e nessun `Access denied` ):
+  le regole 200002/200003, che dovrebbero dare 400, non scattano. Si riproduce su qualunque sito della
+  macchina con un `curl -X POST -H 'Content-Type: multipart/form-data; boundary=x'` e un corpo che non
+  chiude con `--x--`. Il 500 non è un buco, perché la richiesta non passa. Prima di cercare il bug
+  nell'applicazione si confronta l'ora del 500 con l'error log del vhost. ⚠ ModSecurity non registra
+  le richieste da localhost, quindi la prova si fa dall'IP pubblico.
 - **`.htaccess` in sottocartella con `RewriteEngine on`** e senza `RewriteOptions Inherit` spegne le
   regole di rewrite della radice, compresi i divieti di sicurezza: si cercano tutti, non solo quello
   del sito che ha il problema.
