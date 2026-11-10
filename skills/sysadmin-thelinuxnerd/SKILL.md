@@ -217,6 +217,16 @@ il resto è memoria condivisa, contata una volta per processo. Con l'RSS il tett
 Pss era ben sopra 60. ⚠ Il caso peggiore però non è la media di oggi: se nel worker gira mod_php, il
 processo può crescere fino al `memory_limit`, e il conto va fatto anche su quello.
 
+**Errori di connessione al database su tutti i siti nello stesso minuto: prima il traffico.** Misurato il
+10/11/2026: 976 errori di connessione assente e `Too many connections` in tre minuti, su un web server con
+una trentina di siti e un MySQL condiviso a `max_connections 40`. Il database era sano ( carico 0,5,
+memoria libera ); le richieste al minuto di **tutti i vhost sommati** passavano da ~125 a ~300, e il di più
+era uno scanner commerciale distribuito: 6 IP di due cloud con lo stesso reverse DNS, 332 richieste su 13
+siti in 80 secondi. Ogni 404 di un'applicazione che apre il database prima del routing costa una
+connessione. La prima ipotesi, le sessioni di lavoro aperte in quei minuti, era sbagliata di un minuto e
+mezzo: **l'ora si confronta al secondo**. Il blocco dei singoli IP chiude l'episodio, non la causa: lo
+scanner ruota indirizzi, e la domanda vera è il tetto condiviso.
+
 ## 2. Prima di toccare una configurazione
 
 1. **Backup datato, con la data nel nome della cartella e non dopo l'estensione**:
