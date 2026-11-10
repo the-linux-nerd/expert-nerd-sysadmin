@@ -597,6 +597,14 @@ repository di terze parti ( PHP di Sury, MariaDB, Node ). Al primo giro su una m
 - i repository di terze parti si guardano come quello di sicurezza: se la loro chiave scade o il
   repository chiude, `apt` lo dice con un `W:` che nessuno legge.
 
+**Un pacchetto costruito a mano si conserva insieme alla macchina.** Misurato il 10/11/2026: un backport
+di PHP fatto in casa, installato su un server il 23/10, andava portato su un secondo server, e i `.deb` non
+c'erano più ( la cartella di appoggio era stata tolta come file fuori posto ). Si ricostruiscono dai
+pacchetti installati con `dpkg-repack <pacchetto>`, ma **prima** `dpkg -V <pacchetto>` deve uscire pulito,
+se no si impacchettano anche i file modificati a mano. La prova che il risultato è lo stesso è l'impronta
+del binario che conta ( lì `libphp7.3.so` ) uguale sulle due macchine. I `.deb` poi vanno in
+`/var/backups/AAAAMMGG-<pacchetto>-deb/` con `SHA256SUMS`, e il percorso va nel `READ.md`.
+
 ### Quello che non si fa da soli
 
 Il passaggio di versione della distribuzione, e quello di un pannello o di un PHP maggiore, **si
