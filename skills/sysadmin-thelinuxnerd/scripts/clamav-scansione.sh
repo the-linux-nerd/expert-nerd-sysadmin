@@ -18,7 +18,7 @@ ESCL='/(backups|disallineamenti|storico-file-progetto|\.git|node_modules)/|/var/
 # tempo ( misurato l'11/11/2026 su un web server: 400 mila file in 2 giorni, 190 mila immagini;
 # clamscan fa ~3 file/s sui file misti e ~43 sui php ). Un'immagine con dentro una webshell e'
 # pericolosa solo con un'estensione eseguibile, e quella e' qui.
-CODICE='\.(php[0-9]?|phtml|phar|inc|js|mjs|html?|svg|sh|py|pl|cgi|asp|aspx|jsp)$|/\.(htaccess|user\.ini)$|/[^./]+$'
+CODICE='\.(php[0-9]?|phtml)\.|\.(php[0-9]?|phtml|phar|inc|js|mjs|html?|svg|sh|py|pl|cgi|asp|aspx|jsp)$|/\.(htaccess|user\.ini)$|/[^./]+$'
 # GIRO si decide fuori dalla pipe: dentro sarebbe un sottoprocesso, e il valore si perderebbe
 GIRO=incrementale; { [ "$(date +%u)" = 7 ] && [ "$(date +%-d)" -le 7 ]; } && GIRO=completo; [ "$1" = tutto ] && GIRO=completo
 if [ $GIRO = completo ]; then find /var/www -xdev -type f -size -50M 2>/dev/null
