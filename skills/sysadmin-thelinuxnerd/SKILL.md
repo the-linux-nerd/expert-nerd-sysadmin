@@ -564,7 +564,11 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    pannello stesso ) da un file `52-local`. Quindi a ogni giro si legge la blacklist
    ( `apt-config dump | grep -A9 Package-Blacklist` ) e si contano i pendenti **per origine**:
    ogni voce della blacklist ha chi la aggiorna a mano e quando, scritto in `/root/READ.md`, o è un
-   buco. **Il conteggio lo fa `nerd-esclusi.sh`** ( blacklist, hold, terze parti ), che `install.sh`
+   buco. Un repository di terze parti che porta **solo strumenti senza servizio** ( un CLI di un cloud,
+   che esce ogni settimana ) conviene metterlo negli `Origins-Pattern` di un `52unattended-upgrades-local`,
+   se l'amministratore è d'accordo: misurato l'11/11/2026, un CLI del genere generava l'avviso "da fare
+   a mano" una settimana sì e una no. `o=` e `l=` si leggono dalla riga `release` di `apt-cache policy`,
+   e la verifica è la riga `Allowed origins` di `unattended-upgrade --dry-run -d`. **Il conteggio lo fa `nerd-esclusi.sh`** ( blacklist, hold, terze parti ), che `install.sh`
    registra come hook di `SessionStart`: se ci sono pendenti, **si dice al sistemista umano nella
    prima risposta della sessione** che vanno fatti a mano, quanti e da dove, anche se ha chiesto
    altro. Non si aggiornano da soli: la finestra la decide lui;
