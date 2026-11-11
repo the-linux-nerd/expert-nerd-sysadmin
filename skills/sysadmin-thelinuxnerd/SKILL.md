@@ -185,6 +185,8 @@ connessioni aperte sulla porta 22 in quel momento.
 non succede"*, la domanda da farsi è **"se succedesse, verrebbe loggata?"**. Vale per i log di
 apache, di proftpd, del kernel: ognuno tace su qualcosa.
 
+⚠ **Una mail di cron si attribuisce dal mittente e dall'oggetto, non dall'ora.** Il 10/11/2026 una mail delle 06:43 è stata data a un servizio di uptime che girava in quei minuti, e il controllo è stato chiuso come "cron.daily muto". Era cron.daily: parte alle 06:25 e `run-parts --report` spedisce **alla fine** del giro, quindi la mail arriva quando finisce lo script più lento. Se il corpo non è più leggibile, si manda l'output di `run-parts` su un log: `--report` scrive il nome dello script prima del suo output, e il giorno dopo si sa chi parla.
+
 **I comandi di raccolta vanno in una chiamata sola**, con le intestazioni a dividere l'output: in
 diagnosi conta doppio, perché i dati servono tutti insieme per essere confrontati. C'è uno script
 pronto per la prima passata:
