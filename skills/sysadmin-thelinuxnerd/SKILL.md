@@ -276,6 +276,8 @@ sessione già aperta è l'unica rete di sicurezza: si lavora tenendola viva, si 
 dopo che regge ( `who` ), e se l'intervento è davvero rischioso si chiede all'amministratore di
 aprire una seconda sessione prima di procedere.
 
+⚠ **"Host key verification failed" non vuol dire chiave cambiata.** Con `BatchMode=yes` lo stesso errore arriva anche per un host che in `known_hosts` non c'è sotto quel nome. Misurato l'11/11/2026: una macchina è rimasta fuori da un giro di aggiornamenti perché "la host key non torna". La chiave però c'era sotto l'IP interno, era la stessa presentata quel giorno, e mancava solo l'alias. Prima di sospettare un'intercettazione: `ssh-keygen -F <nome>` e `ssh-keygen -F <ip>`, poi si confronta l'impronta con `ssh-keyscan <ip> | ssh-keygen -lf -`. Se coincidono si aggiunge l'alias con la chiave già fidata; se è diversa, si ferma tutto e si verifica dalla console del provider.
+
 ### Bloccare un IP
 
 **Un IP non è un client.** Il 02/11/2026, in piena emergenza, un IP che mandava 12.750 richieste
