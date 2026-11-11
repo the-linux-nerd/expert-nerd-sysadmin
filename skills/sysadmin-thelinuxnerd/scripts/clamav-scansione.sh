@@ -14,8 +14,10 @@ if [ "$DISP" -lt 1500 ]; then echo "ATTENZIONE clamav-scansione: saltata, $DISP 
 find /var/lib/clamav/daily.cvd -mtime -3 2>/dev/null | grep -q . || { echo "ATTENZIONE clamav-scansione: firme vecchie o assenti in /var/lib/clamav" | tee "$LOG"; exit 1; }
 # fuori: le copie fatte da noi ( backups, disallineamenti, storico ), i repository, i log
 ESCL='/(backups|disallineamenti|storico-file-progetto|\.git|node_modules)/|/var/log/|\.log$'
-if { [ "$(date +%u)" = 7 ] && [ "$(date +%-d)" -le 7 ]; } || [ "$1" = tutto ]; then GIRO=completo; find /var/www -xdev -type f -size -50M 2>/dev/null
-else GIRO=incrementale; find /var/www -xdev -type f -cmin -2900 -size -50M 2>/dev/null; fi | grep -Ev "$ESCL" > "$LISTA"
+# GIRO si decide fuori dalla pipe: dentro sarebbe un sottoprocesso, e il valore si perderebbe
+GIRO=incrementale; { [ "$(date +%u)" = 7 ] && [ "$(date +%-d)" -le 7 ]; } && GIRO=completo; [ "$1" = tutto ] && GIRO=completo
+if [ $GIRO = completo ]; then find /var/www -xdev -type f -size -50M 2>/dev/null
+else find /var/www -xdev -type f -cmin -2900 -size -50M 2>/dev/null; fi | grep -Ev "$ESCL" > "$LISTA"
 N=$(wc -l < "$LISTA")
 echo "$(date '+%F %T') giro $GIRO, $N file" >> "$LOG"
 [ "$N" -eq 0 ] && exit 0
