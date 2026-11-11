@@ -1,6 +1,6 @@
 ---
 name: sysadmin-thelinuxnerd
-description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** , che **SSH accetta solo chiavi** e che **gli aggiornamenti di sicurezza si applicano da soli e si verificano a ogni giro** ( "la macchina è aggiornata?", unattended-upgrades, riavvio pendente ), senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi. Alla fine di ogni lavoro la skill si migliora da sola con quello che si è imparato ( commit nel repository ).
+description: Come si amministra una macchina Linux, nel metodo di TheLinuxNerd. Prima si misura e si quantifica, poi si tocca poco e con backup datato, si testa la config prima di ricaricarla, si verifica che il servizio faccia davvero il suo lavoro e non solo che sia "active", e si separa quello che si fa da soli da quello che deve decidere l'amministratore. Attivare ogni volta che si mette mano a una macchina: sintomi ( "l'ssh mi rifiuta", "il sito è lento", "lo spazio è finito", "non mi arriva la posta" ), domande di sicurezza ( "ci sono problemi?", "siamo sotto attacco?", "è compromessa?" ), interventi su servizi e configurazioni ( sshd, apache, nginx, proftpd, fail2ban, firewall, cron, mysql, certbot ), siti WordPress e pannelli di hosting, sospetta compromissione ( "hanno bucato un sito", "c'è un file strano", "il plugin di sicurezza mi ha avvisato" ), backup e monitoraggio ( "i backup ci sono?", "perché non mi è arrivato l'avviso?" ), controlli di stato e giri di manutenzione, takeout di una macchina da dismettere o da trasferire ( "facciamo il backup della macchina per poi eliminarla", "spostiamo il server", "takeout" ), o di un sito solo da archiviare ( "archiviamo il sito", "togliamo il sito da CloudPanel" ). Contiene anche le regole fisse, prima fra tutte che **fail2ban va messo su ogni macchina esposta a Internet** , che **SSH accetta solo chiavi**, che **FTP in chiaro non si usa, solo SFTP** e che **gli aggiornamenti di sicurezza si applicano da soli e si verificano a ogni giro** ( "la macchina è aggiornata?", unattended-upgrades, riavvio pendente ), senza starci a ragionare ogni volta: attivare quindi anche quando si prepara o si eredita una macchina nuova. Vale pure quando la richiesta sembra una riga sola: è lì che si sbaglia diagnosi. Alla fine di ogni lavoro la skill si migliora da sola con quello che si è imparato ( commit nel repository ).
 ---
 
 # Amministrazione di sistema, come la fa TheLinuxNerd
@@ -409,6 +409,30 @@ escludere.
   ( la riga di comando di `bash -c` la contiene ). Misurato l'11/11/2026: exit 144, e il resto della
   riga non è partito. Un processo si ferma per PID ( `pgrep -f` letto prima, in una chiamata a parte ),
   o col trucco della classe: `pkill -f '[g]rep -rlF'`.
+
+### FTP: solo SFTP, mai in chiaro
+
+**Regola fissa dall'11/11/2026**: niente FTP sulla porta 21, solo SFTP. Su FTP utente e password
+viaggiano in chiaro. Misurato quel giorno su un web server: **947 login FTP falliti in una
+settimana**, e sulla 21 non c'era nessuna jail.
+
+- **Prima si conta chi lo usa**: proftpd scrive in wtmp ( `last -f /var/log/wtmp* | grep ftpd` ),
+  e `xferlog` dice cosa trasferisce. In quel caso c'erano 4 utenti; uno solo era attivo, con 1.223
+  trasferimenti in sei mesi e l'ultimo quel pomeriggio. **Chiudere la 21 senza preavviso gli rompe
+  il lavoro**: la 21 si chiude *dopo* che l'utente è passato a SFTP, e l'avviso lo dà
+  l'amministratore, non la sessione.
+- **Se sshd è solo a chiave e gli utenti FTP hanno solo una password**, in sshd la password non si
+  riaccende. SFTP lo dà proftpd stesso con `mod_sftp`, su un'altra porta, con le stesse
+  credenziali, `DefaultRoot ~` e una jail fail2ban che copra anche quella porta: i fallimenti
+  finiscono in `SystemLog` col formato del filtro `proftpd`. Se il firewall del cloud non si può
+  toccare da dentro, si usa una porta del range passivo già aperto, togliendola da `PassivePorts`.
+- ⚠ **proftpd 1.3.6 non legge le host key nel formato OpenSSH nuovo** ( `BEGIN OPENSSH PRIVATE
+  KEY` ). `proftpd -t` dice OK, ma al restart scrive *"Wrong passphrase for this key"* e **non apre
+  nessuna porta, nemmeno la 21**, mentre systemd dice `active`: quella volta la 21 è rimasta giù 33
+  secondi. Si generano chiavi dedicate con `ssh-keygen -m PEM`, e dopo il restart si guarda
+  `ss -ltnp`, non `is-active`.
+- La porta si verifica **da fuori**, da un'altra macchina; la jail con un login sbagliato vero e
+  `fail2ban-regex`, perché da 127.0.0.1 `ignoreip` non conta niente.
 
 ## 3. fail2ban si mette sempre
 
