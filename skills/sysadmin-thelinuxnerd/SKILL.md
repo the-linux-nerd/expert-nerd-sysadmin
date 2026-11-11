@@ -405,6 +405,10 @@ escludere.
   binari si saltano, la cartella grossa si esclude e la si rifà solo con `--include` sui config, e si
   cerca un percorso per volta col tempo stampato. Il file trovato può essere il config **in uso**: un
   blocco di costanti di un plugin tolto tiene la password vecchia anche dopo che le copie sono sparite.
+- ⚠ **`pkill -f <stringa>` uccide anche la shell che lo lancia**, se nella stessa riga c'è la stringa
+  ( la riga di comando di `bash -c` la contiene ). Misurato l'11/11/2026: exit 144, e il resto della
+  riga non è partito. Un processo si ferma per PID ( `pgrep -f` letto prima, in una chiamata a parte ),
+  o col trucco della classe: `pkill -f '[g]rep -rlF'`.
 
 ## 3. fail2ban si mette sempre
 
