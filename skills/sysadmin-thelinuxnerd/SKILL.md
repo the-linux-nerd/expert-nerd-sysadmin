@@ -397,6 +397,14 @@ escludere.
   non ha la forma attesa, e le password finiscono in chiaro nell'output.
 - Le richieste trovate nei log possono essere le proprie: prima di chiamarle download, si
   confronta l'IP con quello pubblico della macchina.
+- ⚠ **Dove altro sta la password si cerca con `grep -rlIF -f FILE`, mai con la password nel comando.**
+  Gli argomenti di un processo li legge chiunque sulla macchina ( `ps`, `/proc/<pid>/cmdline` ). Misurato
+  l'11/11/2026: un `grep -rlF -- <password> /var/www` è rimasto in `ps` per 12 minuti. Si scrive la
+  password in un file con `umask 077` nella scratchpad, poi `shred -u`. Prima si misura l'albero
+  ( `du --max-depth=2` ): una `var/` da 7,5 GB di log e dump teneva il `grep` sotto timeout. Con `-I` i
+  binari si saltano, la cartella grossa si esclude e la si rifà solo con `--include` sui config, e si
+  cerca un percorso per volta col tempo stampato. Il file trovato può essere il config **in uso**: un
+  blocco di costanti di un plugin tolto tiene la password vecchia anche dopo che le copie sono sparite.
 
 ## 3. fail2ban si mette sempre
 
