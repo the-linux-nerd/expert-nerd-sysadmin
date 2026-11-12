@@ -103,7 +103,7 @@ Le operazioni ricorrenti si fanno con gli script di **calabash** ( `github.com/i
 non con comandi scritti a mano ogni volta. Se sulla macchina non c'è ( `command -v va.bak.sh` non
 trova niente ), **si installa** seguendo le istruzioni di calabash, cioè con il suo script:
 
-    wget https://calabash.videoarts.eu/install.sh && chmod +x ./install.sh && ./install.sh
+    wget https://raw.githubusercontent.com/istricesrl/calabash/master/install.sh && chmod +x ./install.sh && ./install.sh
 
 ( da una cartella di lavoro, non dalla radice ). ⚠ Se c'è già ma in `/usr/bin` e `/usr/sbin`, è il
 layout vecchio: l'installer copierebbe tutto anche in `/usr/local`, con doppioni che il `PATH`
