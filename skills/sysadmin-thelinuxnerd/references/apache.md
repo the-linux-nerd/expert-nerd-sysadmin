@@ -139,7 +139,7 @@ resta appeso finché non scade `Timeout`. Con pochi worker basta uno scanner par
 - La correzione applicata è un'azione di ban che chiude anche i socket già aperti, cioè i worker:
   `actionban = ss -K dst <ip> '( sport = :80 or sport = :443 )'` ( richiede `CONFIG_INET_DIAG_DESTROY=y` ), aggiunta
   al jail con `action = %(action_)s` e `ss-kill` su una riga a sé. Provata con una richiesta lasciata a metà da un indirizzo
-  di loopback: con l'azione il server la resetta in 2,6 s, senza aspetta il 408 a 20 s. ⚠ `conntrack -D` non serve:
+  di loopback: con l'azione il server la resetta in 2,6 s, senza aspettare il 408 a 20 s. ⚠ `conntrack -D` non serve:
   cancella lo stato nel firewall ma non chiude il socket, e il worker resta appeso.
 - ⚠ Misurato su fail2ban 0.10: `reload <jail>` e anche `reload` **non aggiungono** un'azione nuova ( `get <jail> actions`
   continua a mostrare solo quella vecchia, senza errori ). Serve `reload --restart <jail>`, che ripristina i ban dal database.
