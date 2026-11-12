@@ -347,6 +347,14 @@ due chiavi private DKIM, 14 fatture e 3 preventivi di clienti finiti in `tmp/`.
   l'`md5sum` dei file su disco è uguale a prima.
 - Prima di tutto si copia l'intero `.git` in un backup datato, e si dice che quella copia **contiene
   ancora i segreti**.
+- ⚠ **Il remote può esistere già.** Prima di crearlo si guarda cosa c'è ( `gh repo view`, poi `git ls-remote` ),
+  e se ha commit si clona e si scansiona come la storia locale. Misurato il 12/11/2026: due repository
+  da creare c'erano già, fatti la mattina da un'altra sessione con una "fotografia" del deploy senza storia.
+  Il push della storia ripulita è stato rifiutato ( non fast-forward ), e una delle due fotografie conteneva
+  12 CSV con dati dei clienti, che la storia locale aveva appena tolto. Sostituire un remote è un `push --force`:
+  lo decide l'amministratore, e il modo auto dell'harness lo ferma comunque ( `[Git Destructive]` ), quindi
+  si prepara uno script da lanciare con `!`. ⚠ Un commit sostituito resta raggiungibile per hash sul server
+  finché non lo pota: se era pubblico, si dice.
 
 ⚠ **Uno script che fallisce dopo aver fatto il lavoro, se lo rilanci, lo rifà.** Il conteggio finale
 usciva con 1 ( `while read …; [[ … ]] && echo` sotto `pipefail` ), lo script terminava zitto, e
