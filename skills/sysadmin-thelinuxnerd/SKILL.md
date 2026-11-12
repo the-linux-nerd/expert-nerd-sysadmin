@@ -111,7 +111,7 @@ perché chi chiama per nome prende la copia nuova e chi chiama per percorso asso
 prende la vecchia. Il layout vecchio interroga anche un sito di versioni dismesso. La migrazione si fa
 in una passata sola. Prima la copia di sicurezza delle `va.*` vecchie, poi l'installer, poi via le copie
 vecchie che hanno la gemella in `/usr/local`, poi `grep -rnoE '/usr/s?bin/va\.' /etc` per i percorsi
-assoluti, da portare su `/usr/local`, e alla fine `monit -t` e `reload`. Prima di togliere le copie
+assoluti, da portare su `/usr/local`, e alla fine `monit -t` e `reload`. ⚠ `monit -t` dice *Control file syntax OK* anche quando un `exec` punta a un programma che non c'è più: lo avvisa con `Program does not exist` ma l'allarme poi non parte. Misurato il 12/11/2026: 12 allarmi muti per due ore dopo la rimozione dei doppioni, con la sintassi data per buona. Si conta quella riga, che deve essere zero, e il `grep` su `/etc` va con `--exclude-dir=ssl`: senza, è andato oltre i 120 secondi. Prima di togliere le copie
 vecchie si confrontano coi file del repo: misurato il 12/11/2026, su 81 copie 14 erano diverse, ma
 erano solo versioni vecchie, e le modifiche locali erano già a monte. ⚠ La verifica non è `calabash
 --version`, che non esiste: è `command -v` che risolve in `/usr/local`, e `va.script.check.sh` che
