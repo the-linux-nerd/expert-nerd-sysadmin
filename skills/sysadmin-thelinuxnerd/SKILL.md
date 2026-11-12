@@ -904,6 +904,8 @@ script notturni con `wp` su quel sito stanno fallendo.
 
 **Un'impostazione cambiata da `wp-cli` si rilegge da un processo nuovo.** Misurato l'11/11/2026, spegnendo i riepiloghi via mail di un plugin di backup su 15 siti: su una versione vecchia del plugin il setter cambia solo l'oggetto in memoria e non salva ( serve `save()` esplicito ), e nello stesso processo la rilettura diceva *"fatto"*. Il secondo giro, con un `wp eval-file` separato, ha trovato il sito rimasto com'era. Si controlla anche il cron di WordPress ( `_get_cron_array()` ): il cambio di frequenza non sempre toglie l'evento già in coda.
 
+**Un file nuovo e legittimo sotto sorveglianza si aggiunge alla baseline solo col suo percorso.** Un mu-plugin messo su tutta la flotta compare come *"percorso nuovo"* in ogni sito sorvegliato. Rigenerare la baseline intera lo zittisce, ma assolve insieme tutto quello che in quel momento è diverso. Si fa la copia della baseline, si accodano solo le righe `sha256sum` dei file appena messi e si controlla che il confronto non li segnali più.
+
 ⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate** ( 15 su un'altra, molte di macchine dismesse ), fra
 portatili e telefoni personali, senza un nome né una scadenza: una qualunque di quelle macchine
 persa è una porta aperta, ed è uno dei canali più plausibili della fuga di credenziali. Si
