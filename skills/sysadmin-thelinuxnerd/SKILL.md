@@ -295,7 +295,19 @@ serviva: quell'user-agent prendeva già 403 da nginx.
 - **Ogni blocco porta data e motivo nel commento**, e si decide subito se è temporaneo: un
   blocco d'emergenza non reso persistente sparisce al riavvio, uno persistente resta per sempre.
 
-### Un repository dentro la document root
+### Git non è un sistema di deploy
+
+⚠ **In produzione non ci sta un repository, per nessuna ragione** ( regola fissa,
+`memory/nerd-git-mai-in-produzione.md` ). Il codice vive nel repository di sviluppo e arriva in
+produzione coi **meccanismi di deploy dell'applicazione**, mai con un `git pull` o un checkout: un
+`.git` in produzione è solo superficie d'attacco ( qui sotto, cosa succede quando risponde dal web )
+e spazio occupato per niente. Uno `stable/` senza `.git` è giusto, e "versioniamo la produzione per
+vedere se si è allontanata" non si propone. Un `.git` trovato in produzione si porta fuori, dopo aver
+verificato che la storia sia sul remote ( `0 0` ), in una copia datata in `/var/backups/`. Detto il
+12/11/2026, davanti a un censimento che proponeva proprio quello, e a decine di deploy di produzione
+messi sotto git una settimana prima.
+
+### Un repository dentro la document root ( sviluppo )
 
 **Misurato il 04/11/2026**: su un web server con tre deploy sotto git, `/.git/HEAD` e `/.git/config`
 rispondevano **200**. Nessuna regola li chiudeva perché nessuno ci aveva pensato, e i log dicevano
