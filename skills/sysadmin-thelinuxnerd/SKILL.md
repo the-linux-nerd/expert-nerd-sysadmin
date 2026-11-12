@@ -708,6 +708,12 @@ Nel caso originario la verifica di fail2ban è stata `fail2ban-regex` sulle ulti
 `auth.log`: **361 agganciate**. Senza quel numero si sarebbe potuto dire soltanto "l'ho
 installato".
 
+⚠ **Anche la verifica può mentire, nel verso opposto.** Con `set -o pipefail`, `cmd | grep -q X`
+o `grep -m1` esce appena trova, `cmd` muore di SIGPIPE e la pipeline risulta **fallita proprio
+quando il match c'è**. Misurato il 12/11/2026: `unattended-upgrade --dry-run -d | grep -m1 'Allowed
+origins' | grep -o ...` stampava l'origine giusta e subito dopo "KO: non compare". Negli script con
+`pipefail` l'output si salva in un file e si fa il `grep` sul file.
+
 ⚠ **Quello che fallisce in silenzio è quello da cui guardarsi**, e ogni riga della tabella nasce da
 un caso vero. Sei certificati sono arrivati a scadenza perché le loro conf, importate da una
 macchina con un certbot più recente, venivano **saltate senza un errore** mentre il timer
