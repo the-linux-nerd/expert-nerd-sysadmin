@@ -122,3 +122,27 @@ Durante un incidente si scopre cosa mancava nei log. Su ogni Apache, in un giro 
 
 Ogni modifica: copia datata, `apachectl configtest`, `reload`, e la verifica dell'effetto
 ( `apachectl -t -D DUMP_RUN_CFG`, il valore attivo, una richiesta vera ) come al punto 4 della skill.
+
+## 7. Un down che comincia con un ban di fail2ban
+
+Misurato il 12/11/2026 su un apache prefork ( `MaxRequestWorkers 60`, `Timeout 300` ): tre down di 3-4 minuti in tre giorni, tutti
+e tre cominciati **entro 2 secondi da un Ban** del jail sui 404, e finiti solo col restart del guardiano. Prima di ogni ban lo
+scanner aveva fatto 123-191 richieste in pochi secondi, quindi molte connessioni in parallelo. Traffico totale, richieste lente
+ed errori del database non spiegavano niente. Altri tre ban, nello stesso periodo, non hanno causato nessun down.
+
+L'ipotesi del meccanismo: il REJECT colpisce anche le connessioni **già stabilite**, e così ogni worker che sta servendo lo scanner
+resta appeso finché non scade `Timeout`. Con pochi worker basta uno scanner parallelo a riempirli tutti.
+
+- Davanti a un down, si confronta l'ora di inizio **al secondo** con `grep -E '\] (Ban|Unban) ' /var/log/fail2ban.log`.
+- ⚠ Nell'access log non si vede: le richieste interrotte dal restart non vengono scritte, quindi la raffica sembra finita
+  nel momento in cui comincia il buco.
+- La correzione applicata è un'azione di ban che chiude anche i socket già aperti, cioè i worker:
+  `actionban = ss -K dst <ip> '( sport = :80 or sport = :443 )'` ( richiede `CONFIG_INET_DIAG_DESTROY=y` ), aggiunta
+  al jail con `action = %(action_)s` e `ss-kill` su una riga a sé. Provata con una richiesta lasciata a metà da un indirizzo
+  di loopback: con l'azione il server la resetta in 2,6 s, senza aspetta il 408 a 20 s. ⚠ `conntrack -D` non serve:
+  cancella lo stato nel firewall ma non chiude il socket, e il worker resta appeso.
+- ⚠ Misurato su fail2ban 0.10: `reload <jail>` e anche `reload` **non aggiungono** un'azione nuova ( `get <jail> actions`
+  continua a mostrare solo quella vecchia, senza errori ). Serve `reload --restart <jail>`, che ripristina i ban dal database.
+  Dopo si controlla sempre `get <jail> actions`.
+- L'altra strada era abbassare `Timeout` da 300 verso 60, ma con `proxy_fcgi` vale anche verso PHP-FPM e taglia i cron lunghi.
+  Per questo è stata scartata.
