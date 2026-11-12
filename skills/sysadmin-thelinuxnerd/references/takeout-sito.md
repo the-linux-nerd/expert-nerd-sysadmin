@@ -41,6 +41,8 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
 
 ## Le trappole già incontrate
 
+- **Un sito già spostato fuori dalla document root ha il database nella config archiviata.** Misurato il 12/11/2026: deploy con la document root vuota e il vecchio codice in un `.tar.gz` sotto `var/`; il censimento ha detto *nessun database trovato*, ma la `src/config.json` dentro l'archivio puntava a un database ancora vivo sul server MySQL condiviso. Prima di chiudere si cerca la config anche negli archivi del sito ( `tar tzf … | grep config.json`, poi `tar xzOf` ), e se il dump notturno del server di database c'è, si copia nel takeout confrontando l'impronta col suo MANIFEST. E se il sito sta sulla stessa macchina, `HOST` è l'IP interno: `localhost` e l'hostname possono non avere né chiave né `known_hosts`.
+
 - **Le copie di backup di CloudPanel** ( `/home/UTENTE/backups` ) restano fuori: spesso pesano più
   del sito. Se l'amministratore le vuole, si aggiungono al pull come percorso extra.
 - **MySQL senza credenziali**: gli script usano `--defaults-extra-file=/etc/mysql.conf`, che deve
