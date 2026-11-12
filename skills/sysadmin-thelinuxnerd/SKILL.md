@@ -406,7 +406,11 @@ escludere.
   `stat` sul disco: un 200 può essere la pagina di catch-all di un CMS.
 - Si confronta la password esposta con quella in uso **senza stamparla**: si conta l'insieme in
   comune. ⚠ Una sostituzione con `sed` che maschera i valori fallisce in silenzio quando la riga
-  non ha la forma attesa, e le password finiscono in chiaro nell'output.
+  non ha la forma attesa, e le password finiscono in chiaro nell'output. Misurato il 12/11/2026: un
+  `grep` su una config con una pipe `grep | sed` di maschera ha fatto uscire la password del database,
+  perché la riga aveva un'assegnazione con una forma che la regex non prevedeva. Una password stampata
+  resta nel transcript e va ruotata. **La maschera si fa in Python, che stampa solo nome e lunghezza
+  del valore**, oppure non si stampa niente e si conta.
 - Le richieste trovate nei log possono essere le proprie: prima di chiamarle download, si
   confronta l'IP con quello pubblico della macchina.
 - ⚠ **Dove altro sta la password si cerca con `grep -rlIF -f FILE`, mai con la password nel comando.**
@@ -957,6 +961,15 @@ trovato **accanto, in una cartella nascosta, lo stesso kit già estratto**: bina
 torrc, finiti pure nel primo commit del deploy. Dentro una document root si cercano **i binari ELF
 e le cartelle che iniziano con un punto**, non solo il PHP, e ogni pezzo trovato si cerca poi su
 tutta la macchina per impronta, dimensione e nome.
+
+⚠ **`XPATH syntax error` in un log MySQL applicativo è l'impronta di una SQL injection error-based**
+( `EXTRACTVALUE`/`UPDATEXML`, il valore estratto torna dentro il messaggio d'errore ). Misurato il
+12/11/2026 su un sito PHP vecchio: 1.684 richieste con payload in due settimane, e l'unico segno
+visibile erano quegli errori nel log dell'applicazione. Per sapere fin dove è arrivato l'attaccante si
+legge cosa ha estratto ( `SCHEMATA`, `COLUMNS`, poi le righe ), e si conta l'esposto con `COUNT`, senza
+leggere il contenuto. Il contenimento più rapido, finché il codice non si corregge, è una regola nel
+vhost che dà 403 ai parametri numerici non numerici e agli apici. Prima di metterla si simula sul log:
+lì ha fermato 1.937 attacchi su 1.937, ma ha dato 403 anche a 276 ricerche legittime con l'apostrofo.
 
 **Si cerca per tecnica, non per nome.** Gli indicatori di un attaccante scadono in mesi, i
 nascondigli no: eseguibili nelle directory di sistema che nessun pacchetto dichiara ( chiesto a
