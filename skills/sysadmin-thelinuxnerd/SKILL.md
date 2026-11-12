@@ -898,6 +898,14 @@ E fail2ban sui log di nginx, con jail per i tentativi su `wp-login.php`, le scan
 webshell e le ricognizioni. Dopo ogni modifica, `nginx -t` e poi una richiesta vera che deve
 prendere il 403 ( punto 4 ).
 
+⚠ **Un sito che arriva da apache porta protezioni che nginx non legge.** Misurato il 12/11/2026,
+spostando un sito: la cartella protetta con `.htaccess` + `.htpasswd` su nginx sarebbe stata aperta,
+e il `.htpasswd` scaricabile. La basic auth va nel vhost, e con **`location ^~ /cartella/`**: nel vhost
+di CloudPanel la regex statica ( `\.(css|js|gz|zip|…)$` ) vince su un prefisso normale, e l'archivio
+dentro la cartella uscirebbe senza password. ⚠ E la prova non si fa nel secondo dopo il `reload`:
+`systemctl reload nginx` torna prima che i worker vecchi escano, e lì le prime richieste hanno
+risposto 206 con una password sbagliata. Pochi secondi dopo, le stesse richieste davano 401.
+
 **Con Varnish in mezzo, il limite per IP va sul backend.** La catena tipica di questi pannelli è
 nginx `:443` → Varnish → nginx `:8080` → PHP-FPM. Un `limit_req` sul fronte conta anche le pagine
 servite dalla cache, che non costano niente; sul server `:8080` conta solo quelle fuori cache,
