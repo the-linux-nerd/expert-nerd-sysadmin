@@ -106,8 +106,16 @@ trova niente ), **si installa** seguendo le istruzioni di calabash, cioè con il
     wget https://raw.githubusercontent.com/istricesrl/calabash/master/install.sh && chmod +x ./install.sh && ./install.sh
 
 ( da una cartella di lavoro, non dalla radice ). ⚠ Se c'è già ma in `/usr/bin` e `/usr/sbin`, è il
-layout vecchio: l'installer copierebbe tutto anche in `/usr/local`, con doppioni che il `PATH`
-risolve a caso. Lì si aggiungono solo gli script nuovi che servono, e lo si dice.
+layout vecchio: l'installer copia tutto in `/usr/local`, e i doppioni dividono il lavoro in silenzio,
+perché chi chiama per nome prende la copia nuova e chi chiama per percorso assoluto ( monit, un cron )
+prende la vecchia. Il layout vecchio interroga anche un sito di versioni dismesso. La migrazione si fa
+in una passata sola. Prima la copia di sicurezza delle `va.*` vecchie, poi l'installer, poi via le copie
+vecchie che hanno la gemella in `/usr/local`, poi `grep -rnoE '/usr/s?bin/va\.' /etc` per i percorsi
+assoluti, da portare su `/usr/local`, e alla fine `monit -t` e `reload`. Prima di togliere le copie
+vecchie si confrontano coi file del repo: misurato il 12/11/2026, su 81 copie 14 erano diverse, ma
+erano solo versioni vecchie, e le modifiche locali erano già a monte. ⚠ La verifica non è `calabash
+--version`, che non esiste: è `command -v` che risolve in `/usr/local`, e `va.script.check.sh` che
+risponde.
 
 Quando uno script non fa quello che serve, **si corregge lo script e si aggiorna il repository di
 calabash** ( commit e push ), invece di fare a mano "per questa volta".
