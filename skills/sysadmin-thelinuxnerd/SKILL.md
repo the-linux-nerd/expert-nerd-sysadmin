@@ -260,6 +260,11 @@ scanner ruota indirizzi, e la domanda vera è il tetto condiviso.
    servizio che esegue lavoro lungo, si mette il timeout ( `process_control_timeout = 120s` ) e si
    ricarica quando i lock dei job ( `flock` in `/var/lock` ) sono liberi. E le prove "prima/dopo"
    sulle URL più frequenti **escludono gli endpoint di cron e dei task**: chiamarli è eseguirli.
+   ⚠ **Un processo lungo non rilegge la config da solo.** Misurato il 12/11/2026: sessioni di
+   un agente avviate in `dtach` tre settimane prima avevano ignorato per giorni una soglia messa
+   dopo nel file di impostazioni ( una è arrivata al 270% della soglia ), e il "reset" della
+   conversazione non riavviava il processo. Quando un servizio "non applica" una config giusta, si
+   confronta `ps -o lstart= -p PID` con la data del file, e `readlink /proc/PID/exe` con il binario.
 4. **Modifica minima.** Si cambia la riga che risolve il problema misurato, non si riscrive il
    file "già che ci siamo": un file riscritto rende impossibile capire, il mese dopo, quale
    modifica ha causato cosa.
