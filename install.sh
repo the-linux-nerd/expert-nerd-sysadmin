@@ -55,6 +55,30 @@ for f in "$CD"/bin/*; do
   [ -x "$DEST/bin/$( basename "$f" )" ] || fai "chmod +x '$DEST/bin/$( basename "$f" )'"
 done
 
+echo "== cron =="
+# I cron del metodo ( cron/ ) vanno in /etc/cron.d, ma solo da root e solo su Debian: i tracker
+# delle CVE sono quelli di Debian. Il precedente, se diverso, va in /var/backups/<data>-thelinuxnerd/.
+if [ "$( id -u )" -eq 0 ] && [ -d /etc/cron.d ] && grep -qx 'ID=debian' /etc/os-release 2>/dev/null; then
+  for f in "$CD"/cron/*; do
+    [ -f "$f" ] || continue
+    d="/etc/cron.d/$( basename "$f" )"
+    if [ -f "$d" ] && cmp -s "$f" "$d"; then
+      echo "  = $d ( gia' aggiornato )"
+      continue
+    fi
+    if [ -f "$d" ]; then
+      echo "  ~ $d ( il precedente va in /var/backups/$DATA-thelinuxnerd/ )"
+      fai "mkdir -p '/var/backups/$DATA-thelinuxnerd' && cp -an '$d' '/var/backups/$DATA-thelinuxnerd/'"
+    else
+      echo "  + $d"
+    fi
+    # cron.d vuole root:root e niente scrittura per altri, se no il file si ignora in silenzio
+    fai "install -o root -g root -m 0644 '$f' '$d'"
+  done
+else
+  echo "  ( non root o non Debian: cron saltati )"
+fi
+
 echo "== memoria =="
 # Le memorie del metodo si chiamano nerd-*.md: vivono nel repo e si modificano solo li'.
 # Tutte le altre sono della macchina: install.sh non le legge e non le tocca.

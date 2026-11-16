@@ -14,6 +14,8 @@ per Claude Code, più gli strumenti che la skill usa. Nato il **23/09/2026** dal
 | `skills/todo-elenco/` | come si presentano all'utente le voci aperte di un `TODO.md` — la skill sopra ci rimanda |
 | `bin/nerd-aggiorna.sh` | la skill si aggiorna da sola: hook di `SessionStart` registrato da `install.sh`, una volta al giorno `fetch`, e se il clone è pulito `pull --ff-only` e `install.sh`; commit locali e modifiche non si forzano mai |
 | `bin/nerd-esclusi.sh` | i pendenti che il giro automatico non fa ( blacklist, hold, terze parti ), ricordati a ogni sessione da un hook di `SessionStart` |
+| `bin/cve-server.py` | le CVE dei pacchetti installati contro il tracker Debian ( o Freexian ELTS per buster/stretch ) e il KEV della CISA, con rapporto e KO; `--esito` per i controlli di chiusura. Il suo cron sta in `cron/cve-server` ( ogni 4 ore ) |
+| `cron/` | i cron del metodo: `install.sh` li mette in `/etc/cron.d/`, **solo da root e solo su Debian**, col precedente in `/var/backups/<data>-thelinuxnerd/` |
 | `bin/todo.py` | legge il `TODO.md` una riga per voce, invece di riversarlo intero nel contesto. ⚠ **Copia, non fonte**: il sorgente è `~/Dropbox/.claude/` di Fabio, diffuso sui server da `diffondi-server.sh`; qui si aggiorna copiandolo da lì quando cambia, **non si modifica nel repo** |
 | `memory/` | le regole fisse, in forma di memoria di Claude, tutte col prefisso `nerd-`: *fail2ban va sempre messo*, *SSH solo a chiave*, *paranoia sugli aggiornamenti* |
 

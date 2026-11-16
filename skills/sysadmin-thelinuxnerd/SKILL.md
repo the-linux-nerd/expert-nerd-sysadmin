@@ -700,7 +700,10 @@ il repository offre. Su una release in fine supporto il repository non offre pi�
 resta "aggiornata" mentre le CVE si accumulano. Un sysadmin paranoico **guarda le CVE che escono più
 volte al giorno**, e le guarda contro **le versioni installate**, non contro un elenco generico.
 
-Lo fa [`scripts/cve-server.py`](scripts/cve-server.py), da cron ogni 4 ore ( `nice -n 15 ionice -c3` ):
+Lo fa [`cve-server.py`](../../bin/cve-server.py), che `install.sh` mette in `~/.claude/bin/` con il suo
+cron ( [`cron/cve-server`](../../cron/cve-server) in `/etc/cron.d/`, **solo su Debian** e solo da root ), quindi
+arriva su ogni macchina con l'aggiornamento della skill. Gira ogni 4 ore ( `nice -n 15 ionice -c3` ), e
+su una macchina che non è Debian, o senza `python3-apt`, dice KO col motivo invece di un OK finto:
 
 - fonti: il tracker di sicurezza Debian per le release supportate, il tracker **Freexian ELTS** per
   stretch e buster ( quello Debian non le ha più ), e il **KEV della CISA**, le CVE sfruttate davvero.
