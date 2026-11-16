@@ -276,6 +276,7 @@ toccare una riga di logica:
   non lo legge più ( 500 ), e su una directory apache risponde 403 con un `AH00529` che cita un
   `.htaccess` magari inesistente — il problema vero è lo stat sulla cartella. È andato avanti per
   settimane, centinaia di volte al giorno, prima che qualcuno lo collegasse. Dopo ogni scrittura
+  in una document root: `stat -c '%U:%G %a' <file>`.
   ⚠ Vale anche per il **PHP di un sito lanciato da root** a riga di comando: misurato il 16/11/2026, una prova
   da CLI ha riscritto root:root il file in cui il framework segna il controllo di versione. Sette giorni dopo,
   scaduto il file, ogni pagina aspettava i 30 s di timeout di una chiamata a un server morto, perché
@@ -283,7 +284,6 @@ toccare una riga di logica:
   La guardia che lo impone è un `auto_prepend_file` nel conf.d della **CLI**, che esce se `PHP_SAPI === 'cli'`,
   l'euid è 0 e lo script o la cwd stanno sotto la radice dei siti. Si scavalca con una variabile d'ambiente.
   `php -r` non esegue il prepend e resta scoperto.
-  in una document root: `stat -c '%U:%G %a' <file>`.
 - **L'inode.** `sed -i` e `git checkout / pull / stash` non riscrivono il file, lo **sostituiscono**:
   un hardlink voluto si spezza in silenzio ( visti 1.115 file condivisi fra due installazioni ).
   Chi scrive sul posto, come `open(path, 'w')`, mantiene l'inode.
