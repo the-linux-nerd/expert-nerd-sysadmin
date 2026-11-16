@@ -252,6 +252,14 @@ scanner ruota indirizzi, e la domanda vera è il tetto condiviso.
 2. **Test di sintassi prima di ricaricare**, sempre: `sshd -t`, `apachectl configtest`,
    `nginx -t`, `fail2ban-client -t`, `visudo -c`, `named-checkconf`. Una config rotta su un
    servizio di rete si paga con la macchina irraggiungibile.
+   ⚠ **Una guardia che vieta qualcosa a root rompe i cron di root: si cercano tutti, non solo
+   quelli di `cron.d`.** Il 16/11/2026 un `auto_prepend_file` che ferma il PHP CLI da root sotto
+   `/var/www` è stato installato dopo aver guardato solo `/etc/cron.d` e la crontab: il notturno
+   in `/etc/cron.daily` lanciava da root composer, le patch del DB e la documentazione su ogni
+   deploy, e si sarebbe fermato tutto. Prima di una restrizione si fa `grep` su `/etc/crontab`,
+   `/etc/cron.d`, `/etc/cron.{hourly,daily,weekly,monthly}`, le crontab utente e i timer systemd,
+   **e sugli script che quei cron chiamano**. Attenzione anche alle prove: `auto_prepend_file`
+   non vale per `php -r`, quindi una prova con `php -r` passa sempre e non prova niente.
 3. **`reload`, non `restart`**, quando il servizio è quello da cui si è connessi. Il reload di
    sshd non butta giù le sessioni aperte; il restart è un rischio che non serve correre.
    ⚠ **Un reload non è sempre gentile.** php-fpm col default `process_control_timeout = 0`
