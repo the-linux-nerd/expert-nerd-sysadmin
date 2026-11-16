@@ -693,6 +693,54 @@ se no si impacchettano anche i file modificati a mano. La prova che il risultato
 del binario che conta ( lì `libphp7.3.so` ) uguale sulle due macchine. I `.deb` poi vanno in
 `/var/backups/AAAAMMGG-<pacchetto>-deb/` con `SHA256SUMS`, e il percorso va nel `READ.md`.
 
+### Le CVE: più volte al giorno, contro i pacchetti veri
+
+Che `unattended-upgrades` giri non dice se la macchina è vulnerabile: dice solo che ha preso quello che
+il repository offre. Su una release in fine supporto il repository non offre più niente, e la macchina
+resta "aggiornata" mentre le CVE si accumulano. Un sysadmin paranoico **guarda le CVE che escono più
+volte al giorno**, e le guarda contro **le versioni installate**, non contro un elenco generico.
+
+Lo fa [`scripts/cve-server.py`](scripts/cve-server.py), da cron ogni 4 ore ( `nice -n 15 ionice -c3` ):
+
+- fonti: il tracker di sicurezza Debian per le release supportate, il tracker **Freexian ELTS** per
+  stretch e buster ( quello Debian non le ha più ), e il **KEV della CISA**, le CVE sfruttate davvero.
+  Si scaricano con `curl -z`, solo se cambiate; il JSON grosso si legge tenendo solo la release della
+  macchina ( ~250 MB di RAM per 140 MB di feed );
+- per ogni pacchetto sorgente installato ( `dpkg-query`, stato `ii`; per il kernel **solo quello che
+  gira** ) e ogni sua CVE: `open` è vulnerabile senza correzione, `resolved` con la versione installata
+  minore di `fixed_version` ( `apt_pkg.version_compare` ) è vulnerabile con la correzione che esiste;
+- urgenza `end-of-life` vuol dire che **nemmeno il tracker segue più quel pacchetto**: le sue CVE
+  restano aperte per sempre e si contano per pacchetto, non una per una;
+- il giro dopo sa cosa è **nuovo** ( `ultimo.json` ), e le decisioni stanno in `valutazioni.tsv`:
+  `CVE` oppure `pkg:<sorgente>`, data, `mitigata | accettata | non-applicabile`, nota.
+
+**KO** se una CVE vulnerabile è nel KEV, se una nuova è urgenza `high`, se su una release supportata
+c'è una correzione non applicata, o se il giro è più vecchio di 8 ore — sempre se non valutata.
+Il controllo di chiusura legge solo l'esito ( `--esito` ), il giro vero lo fa il cron.
+
+**Come si legge il rapporto**, sezione per sezione:
+
+1. **KEV**: qui si decide. Per ciascuna: il pacchetto serve? ( un chromium installato per i test su
+   un server web si toglie ) È raggiungibile da fuori? ( apache, php, openssh sì; un font o un
+   compressore solo attraverso ciò che li usa ) C'è una mitigazione? ( un modulo del kernel che si
+   blocca in `modprobe.d`, una direttiva spenta ) Poi la si **aggiorna**, la si **mitiga** e la si
+   scrive in `valutazioni.tsv`, o si propone all'amministratore di **accettarla**: accettare un
+   rischio non lo decide il sistemista.
+2. **Correzione disponibile e non applicata**: su una release supportata è un difetto
+   dell'aggiornamento automatico, si torna alla verifica qui sopra.
+3. **Nuove**: si leggono tutte, ogni giro. È la ragione per cui il giro è frequente.
+4. **Urgenza high**: lo stato di fondo, da tenere basso.
+5. **Senza supporto**: il numero che dice quanto costa restare sulla release vecchia. Si riferisce
+   all'amministratore insieme alla data di fine supporto, ed è l'argomento più forte per migrare.
+
+⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
+chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
+pubblicata solo in ELTS. **Il repository ELTS di Freexian è pubblico** ( `deb.freexian.com/extended-lts`,
+con `freexian-archive-keyring` ): la prima azione su una buster o una stretch è proporre di metterlo nelle
+sorgenti apt, e da lì `unattended-upgrades` ricomincia a portare correzioni. Una correzione fatta in casa
+( un backport ) il tracker non la vede: la si scrive in `valutazioni.tsv` come `mitigata`. `unattended-upgrades` diceva "No packages found", ed era
+vero: non c'era più niente da prendere.
+
 ### Quello che non si fa da soli
 
 Il passaggio di versione della distribuzione, e quello di un pannello o di un PHP maggiore, **si
