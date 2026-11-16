@@ -738,11 +738,18 @@ Il controllo di chiusura legge solo l'esito ( `--esito` ), il giro vero lo fa il
 
 ⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
 chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
-pubblicata solo in ELTS. **Il repository ELTS di Freexian è pubblico** ( `deb.freexian.com/extended-lts`,
-con `freexian-archive-keyring` ): la prima azione su una buster o una stretch è proporre di metterlo nelle
-sorgenti apt, e da lì `unattended-upgrades` ricomincia a portare correzioni. Una correzione fatta in casa
+pubblicata solo in ELTS. **Il repository ELTS di Freexian si scarica senza credenziali** ( `deb.freexian.com/extended-lts`,
+con `freexian-archive-keyring`, chiave `AB59 7C4F 6F33 80BD 4B2B EBC2 A073 10D3 6905 5D5A` ), però Freexian
+lo presenta come servizio in abbonamento: se usarlo senza contratto o con un preventivo lo decide l'amministratore.
+La prima azione su una buster o una stretch è proporre di metterlo nelle sorgenti apt, e da lì `unattended-upgrades` ricomincia a portare correzioni. Una correzione fatta in casa
 ( un backport ) il tracker non la vede: la si scrive in `valutazioni.tsv` come `mitigata`. `unattended-upgrades` diceva "No packages found", ed era
 vero: non c'era più niente da prendere.
+
+⚠ **«end-of-life in ELTS» vale per il pacchetto sorgente, non per il componente.** Sul tracker il kernel
+`linux` ( 4.19 ) è end-of-life, ma ELTS mantiene `linux-6.1`, un backport per buster ( fino al 30/06/2028, il
+5.10 è finito ad agosto 2026 ): prima di scrivere "il kernel non ha più uscita, serve la migrazione" si
+cercano nel tracker e nei `Packages` i sorgenti fratelli ( `linux-*`, `php*`, `openjdk-*` ). Il 16/11/2026
+l'avevo scritto sbagliato a Fabio.
 
 ### Quello che non si fa da soli
 
