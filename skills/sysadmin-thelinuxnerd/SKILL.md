@@ -875,6 +875,13 @@ MANIFEST da ricontrollare dopo la copia.
 
 ⚠ **Un controllo automatico che confronta "prima" e "dopo" prende la base dal traffico buono.** Le pagine che negli access log davano 200 si contano solo se le hanno chieste almeno 2 IP diversi, esclusi gli IP nostri e quelli già in DROP: il 04/10/2026 un solo scanner aveva fatto dare per rotte 11 pagine di altri siti. Prima di dare un KO si riprova dopo un minuto, e un log `.err` pieno di eventi normali si corregge alla fonte, non si esclude dal controllo ( health-deploy.py --notte su web03, 17/11/2026 ).
 
+**Il fix a monte non è il fix dove il codice gira.** Prima di chiudere un difetto perché "è corretto
+nel repository", si guarda la copia che serve davvero le richieste: le copie aggiornate a mano
+( produzione, `stable/` ) possono restare indietro per settimane e rifare il difetto. Esempio del
+17/11/2026 su web03: il terminatore dei font in cache era corretto in develop dal 27/10, ma 9 stable
+su 10 avevano ancora il codice vecchio, e uno aveva rifatto un font rotto la sera stessa della
+riparazione. Si chiude dicendo **dove** il fix non è ancora arrivato e qual è il rimedio intanto.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
