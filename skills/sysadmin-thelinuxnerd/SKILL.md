@@ -894,6 +894,11 @@ fa spegnere un sito vivo.
 
 **Un rimedio a un evento notturno si prova solo dopo una notte, e guardando l'evento.** "La tabella non torna vuota" e' vero solo se la tabella e' stata ricreata davvero: si guarda `create_time` ( dev'essere dopo il giro ) e poi i conteggi. Una tabella piena con `create_time` vecchio non dice niente sul rimedio, dice solo che stanotte il caso non si e' presentato.
 
+### Copia di un database per un dev: i DEFINER, e gli strumenti per percorso ( 17/11/2026 )
+
+- Una copia `mysqldump | mysql` fatta con l'admin **non basta**, se routine o viste hanno come DEFINER l'utente del cliente: sul DB nuovo quell'utente non ha diritti, e il carico si ferma a metà con `ERROR 1370 execute command denied`. Prima si contano i DEFINER ( `information_schema.routines` e `.views` ), poi si passa il dump in un `sed` che porta `cliente@%` su `cliente_dev@%`. Alla fine si confrontano tabelle, routine e trigger fra l'origine e la copia, e si legge una vista con l'utente nuovo.
+- Uno strumento che gira sia da cron sia dalle sessioni trova i suoi pezzi **per percorso** ( `dirname $(readlink -f $0)` ), non dal PATH, e si ferma se un pezzo gli ritorna vuoto. Un `va.bak.sh` lanciato con un PATH senza `/usr/local/bin` ha prodotto `<dest>/-motivo/`, senza dare errore.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
