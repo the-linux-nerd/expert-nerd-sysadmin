@@ -75,6 +75,9 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   `127.0.0.1` e scrive *"nomi DNS che puntano qui: 0"* anche quando puntano lì. Il DNS si guarda a mano
   contro l'IP pubblico.
 
+- **Il censimento trova solo i database delle config.** Misurato il 17/11/2026: un deploy glisweb aveva sul server condiviso anche un `DB_sorgente` che nessuna `config.json` nomina, e il censimento non l'ha visto. Per un sito da archiviare si elencano sul server del database tutti gli schemi col prefisso del sito ( `SHOW DATABASES LIKE` ) e gli utenti ( `mysql.user` ), e si salvano tutti dal server con l'amministratore; i file aggiunti a mano hanno le loro impronte in un `SHA256SUMS.*` a parte, perché `verify` li segnala come "non nell'elenco atteso" e non li controlla;
+- **la renewal di certbot e il vhost hanno lo stesso nome** ( `SITO.conf` ): spostati nella stessa cartella di archivio, il secondo sovrascrive il primo in silenzio. Si archivia per sottocartelle ( `apache2-sites-available/`, `letsencrypt-renewal/`, `cron.d/` ), visto il 17/11/2026.
+
 ## Salvataggio e verifica
 
     va.takeout.pull.sh HOST CARTELLA [PERCORSI EXTRA]
