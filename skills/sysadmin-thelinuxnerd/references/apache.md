@@ -146,3 +146,12 @@ resta appeso finché non scade `Timeout`. Con pochi worker basta uno scanner par
   Dopo si controlla sempre `get <jail> actions`.
 - L'altra strada era abbassare `Timeout` da 300 verso 60, ma con `proxy_fcgi` vale anche verso PHP-FPM e taglia i cron lunghi.
   Per questo è stata scartata.
+
+## Produzione e dev sullo stesso server: il cutover
+
+Visto il 17/11/2026 su un deploy con `stable/` ( produzione ) e `dev/` ( aggiornato la notte da uno script automatico ). Il "cutover" alla versione nuova è stato fatto spostando il vhost di produzione su `dev/`: il sito andava, ma da quel momento la produzione si aggiornava da sola ogni notte, e un aggiornamento rotto l'avrebbe portato giù senza che nessuno l'avesse deciso.
+
+- **Il cutover porta il codice nuovo in `stable/`; il vhost di produzione non cambia cartella.** Si costruisce la copia fuori dalla radice del sito ( `rsync -a` di `dev/` senza `.git`, log, cache e tmp ), si contano i file sui due lati, e si scambiano le cartelle con due `mv`; il vecchio `stable/` resta archiviato in `var/AAAAMMGG-scopo/`.
+- **Il dev resta un dev**: un nome suo ( `dev.DOMINIO` ), una variabile d'ambiente che lo dichiara ( `SetEnv STATUS DEV` ) e un database suo. Si verifica sul server del database con `information_schema.processlist` mentre si fanno richieste ai due nomi: ogni nome deve usare il suo utente e il suo schema.
+- **Il controllo dopo l'aggiornamento automatico vuole il DNS.** Se lo script fa `curl` su un URL del dev per decidere il rollback, finché il nome non risolve il controllo fallisce sempre: l'URL si mette solo dopo che il DNS risponde. Prima si prova con `curl --resolve NOME:80:127.0.0.1`.
+- Un vhost "solo locale" ( riga in `/etc/hosts` ) va bene per provare, non come dev: chi lavora dal suo computer non lo raggiunge.
