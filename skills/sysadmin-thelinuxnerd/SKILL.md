@@ -892,6 +892,8 @@ fa spegnere un sito vivo.
 
 **Prima di proporre di spegnere qualcosa, si rilegge cosa l'amministratore ha gia' detto.** Un sito con stable vuoto, niente codice e quattro richieste al giorno sembra morto, e puo' essere uno shortlinker che l'amministratore usa ogni giorno. Il censimento misura, ma il fatto scritto ( READ, note, memoria ) vince sulla misura: `grep` del nome in tutto il sapere della macchina prima di metterlo in lista. Proporre di nuovo una cosa che l'amministratore ha gia' escluso gli dice che non lo si ascolta.
 
+**Un rimedio a un evento notturno si prova solo dopo una notte, e guardando l'evento.** "La tabella non torna vuota" e' vero solo se la tabella e' stata ricreata davvero: si guarda `create_time` ( dev'essere dopo il giro ) e poi i conteggi. Una tabella piena con `create_time` vecchio non dice niente sul rimedio, dice solo che stanotte il caso non si e' presentato.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
