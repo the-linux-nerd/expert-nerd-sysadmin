@@ -882,6 +882,14 @@ nel repository", si guarda la copia che serve davvero le richieste: le copie agg
 su 10 avevano ancora il codice vecchio, e uno aveva rifatto un font rotto la sera stessa della
 riparazione. Si chiude dicendo **dove** il fix non è ancora arrivato e qual è il rimedio intanto.
 
+**Uno zero dappertutto è un errore di misura finché non si prova il contrario.** Il caso più comune:
+le date dei log di Apache sono in inglese ( `17/Nov/2026` ), ma `date +%b` segue il locale della
+macchina e su una macchina italiana scrive `nov`. Un conteggio delle richieste di oggi fatto con
+`grep "$(date +%d/%b/%Y)"` dà 0 su tutti i siti. Si scrive `LC_ALL=C date +%d/%b/%Y`. Esempio del
+17/11/2026 su web03: il primo giro dava 0 richieste su 11 deploy, quello con `LC_ALL=C` ne ha contate
+27.010 sul più trafficato. Un sito "senza traffico" è un candidato alla dismissione: un errore così
+fa spegnere un sito vivo.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
