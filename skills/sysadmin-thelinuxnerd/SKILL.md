@@ -890,6 +890,8 @@ macchina e su una macchina italiana scrive `nov`. Un conteggio delle richieste d
 27.010 sul più trafficato. Un sito "senza traffico" è un candidato alla dismissione: un errore così
 fa spegnere un sito vivo.
 
+**Prima di proporre di spegnere qualcosa, si rilegge cosa l'amministratore ha gia' detto.** Un sito con stable vuoto, niente codice e quattro richieste al giorno sembra morto, e puo' essere uno shortlinker che l'amministratore usa ogni giorno. Il censimento misura, ma il fatto scritto ( READ, note, memoria ) vince sulla misura: `grep` del nome in tutto il sapere della macchina prima di metterlo in lista. Proporre di nuovo una cosa che l'amministratore ha gia' escluso gli dice che non lo si ascolta.
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
