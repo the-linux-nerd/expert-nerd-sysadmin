@@ -873,6 +873,8 @@ MANIFEST da ricontrollare dopo la copia.
   poi si spostano a mano gli `.ibd` rimasti, che InnoDB non conosce, e si rilancia il `DROP`. Gli `.ibd`
   non si spostano mai **prima** del `DROP`: quelli registrati lascerebbero il dizionario sporco.
 
+⚠ **Un controllo automatico che confronta "prima" e "dopo" prende la base dal traffico buono.** Le pagine che negli access log davano 200 si contano solo se le hanno chieste almeno 2 IP diversi, esclusi gli IP nostri e quelli già in DROP: il 04/10/2026 un solo scanner aveva fatto dare per rotte 11 pagine di altri siti. Prima di dare un KO si riprova dopo un minuto, e un log `.err` pieno di eventi normali si corregge alla fonte, non si esclude dal controllo ( health-deploy.py --notte su web03, 17/11/2026 ).
+
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
