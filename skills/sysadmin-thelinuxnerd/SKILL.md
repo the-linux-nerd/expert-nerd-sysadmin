@@ -249,6 +249,7 @@ scanner ruota indirizzi, e la domanda vera è il tetto condiviso.
    `Include`; e al contrario una copia chiamata `vecchio.conf` lasciata accanto all'originale **ci
    finisce dentro**, e la config si carica due volte. Se la macchina ha un suo strumento per le
    copie, lo dice il `READ.md`.
+   ⚠ **Il backup si verifica prima di toccare il file**: `ls` della copia, non l'exit dello script. `va.bak.sh` su una macchina può non creare le cartelle intermedie, e un ripiego `cmd | tail -1 || piano_b` non scatta mai, perché `||` guarda l'exit dell'ultimo comando della pipe ( `tail` ) e non di `cmd` ( `set -o pipefail`, o niente pipe ). Successo su mysql03 il 17/11/2026: config cambiata senza copia, originale ricostruito dopo.
 2. **Test di sintassi prima di ricaricare**, sempre: `sshd -t`, `apachectl configtest`,
    `nginx -t`, `fail2ban-client -t`, `visudo -c`, `named-checkconf`. Una config rotta su un
    servizio di rete si paga con la macchina irraggiungibile.
