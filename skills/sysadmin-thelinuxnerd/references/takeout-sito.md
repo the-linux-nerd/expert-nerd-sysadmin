@@ -91,5 +91,6 @@ controlla che ogni archivio atteso ci sia, si legga fino in fondo e torni con `S
 Spegnere il sito, cancellare i file, il database, l'utente MySQL e i record DNS lo decide
 l'amministratore, e solo dopo un verify OK. Prima di cancellare ( visto il 17/11/2026 ):
 - si rifà il giro sul server del database ( `SHOW DATABASES LIKE` col prefisso, `mysql.user` ): un takeout di qualche giorno prima può non avere un database che c'era, e un `DROP` dopo non si recupera; i dump mancanti si fanno dall'amministratore e si contano contro `information_schema`;
+- se fra il takeout e la cancellazione e' passato del tempo, si confronta l'archivio col disco ( numero di file, `find -newer` sull'archivio ): sul sito spento girano ancora cron, log e le sessioni Claude del progetto, e il 17/11/2026 in quattro ore erano cambiati 77 file; si rifà un archivio `finale` completo, lo si conta e solo dopo si cancella;
 - la decisione di spegnere si conferma **col nome del sito**, uno per riga: una risposta a una lista numerata si aggancia facilmente al punto sbagliato, e "probabilmente anche quest'altro" ha spento un sito in uso. Il takeout si conserva dove dice lui, con una riga nel
 README della cartella di archivio.
