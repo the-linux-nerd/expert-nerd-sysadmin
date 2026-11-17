@@ -89,5 +89,7 @@ controlla che ogni archivio atteso ci sia, si legga fino in fondo e torni con `S
 ## Dopo
 
 Spegnere il sito, cancellare i file, il database, l'utente MySQL e i record DNS lo decide
-l'amministratore, e solo dopo un verify OK. Il takeout si conserva dove dice lui, con una riga nel
+l'amministratore, e solo dopo un verify OK. Prima di cancellare ( visto il 17/11/2026 ):
+- si rifà il giro sul server del database ( `SHOW DATABASES LIKE` col prefisso, `mysql.user` ): un takeout di qualche giorno prima può non avere un database che c'era, e un `DROP` dopo non si recupera; i dump mancanti si fanno dall'amministratore e si contano contro `information_schema`;
+- la decisione di spegnere si conferma **col nome del sito**, uno per riga: una risposta a una lista numerata si aggancia facilmente al punto sbagliato, e "probabilmente anche quest'altro" ha spento un sito in uso. Il takeout si conserva dove dice lui, con una riga nel
 README della cartella di archivio.
