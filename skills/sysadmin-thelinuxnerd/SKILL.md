@@ -227,6 +227,16 @@ il resto è memoria condivisa, contata una volta per processo. Con l'RSS il tett
 Pss era ben sopra 60. ⚠ Il caso peggiore però non è la media di oggi: se nel worker gira mod_php, il
 processo può crescere fino al `memory_limit`, e il conto va fatto anche su quello.
 
+**Il PHP da riga di comando su Debian non ha tetto di memoria.** Il `php.ini` della CLI dice
+`memory_limit = -1` ( quello di Apache 128M ), quindi un solo script in loop prende tutta la RAM. Il
+17/11/2026, su 7,8 GB senza swap, un test lanciato da riga di comando è salito tre volte a 3,4-3,9 GB:
+l'OOM killer l'ha ucciso e nel frattempo i cron degli altri siti hanno preso `MySQL server has gone away`,
+che sembrava un problema del database. Si risale con `grep -E 'Killed process|invoked oom-killer'
+/var/log/kern.log`, poi il pid nel dump e chi lo aveva lanciato. Il rimedio è un file in
+`/etc/php/<v>/cli/conf.d/` ( `90-tetto-memoria.ini`, `memory_limit = 2048M` ), non la modifica del
+`php.ini`: prima si misura l'uso reale dei php CLI ( lì sotto i 50 MB ), e lo script che ha davvero bisogno
+di più lo dichiara lui con `php -d memory_limit=4G`. Va controllato su ogni macchina: è il default.
+
 **Errori di connessione al database su tutti i siti nello stesso minuto: prima il traffico.** Misurato il
 10/11/2026: 976 errori di connessione assente e `Too many connections` in tre minuti, su un web server con
 una trentina di siti e un MySQL condiviso a `max_connections 40`. Il database era sano ( carico 0,5,
