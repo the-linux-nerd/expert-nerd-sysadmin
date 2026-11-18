@@ -817,6 +817,18 @@ avrebbe dato OK. Le trappole, tutte insieme:
 8. **La skill deve essere aggiornata dove serve.** cloudpanel03 era fermo al 12/11, senza `cve-server`,
    perché l'hook gira solo all'apertura di una sessione: per questo c'è il cron `nerd-aggiorna`
    ( vedi «Prima di cominciare» ).
+9. **Gli avvisi del giorno li legge la macchina da sola, non un bot.** Il tracker arriva giorni dopo
+   l'annuncio, e per i pacchetti di terzi non arriva mai. Per questo `cve-server.py` scarica a ogni giro
+   l'indice di oss-security degli ultimi 3 giorni ( `openwall.com/lists/oss-security/AAAA/MM/GG/`, solo
+   GET pubblici, cache in `feed/oss-security/` ) e cerca negli oggetti i nomi di due gruppi di pacchetti:
+   quelli dei repository di terzi e quelli dei **servizi in ascolto fuori da localhost**, ricavati con
+   `ss`, `/proc/PID/exe` e `dpkg -S`. Gli avvisi trovati finiscono nella sezione **0b** del rapporto,
+   e restano KO finché non c'è una riga `oss:AAAA/MM/GG/N`, oppure la riga della CVE citata nell'oggetto,
+   in `valutazioni.tsv`. La riga `pkg:` non basta, perché l'avviso è una notizia nuova. La skill non
+   dipende da the-linux-bot, dalla posta fra Claude o da Discord: chi la clona da GitHub ha lo stesso
+   controllo. Un nome troppo generico ( `linux`, `python`, `google`... ) non si cerca, e un pacchetto
+   che gli avvisi chiamano in un altro modo ( `apache2` diventa `httpd`, `openssh` diventa `sshd` ) va
+   in `ALIAS`.
 
 ⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
 chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
