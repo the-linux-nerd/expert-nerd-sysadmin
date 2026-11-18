@@ -691,6 +691,12 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    non caricata non è applicata**: un `sshd` o un `php-fpm` partito prima dell'aggiornamento di
    OpenSSL è vulnerabile come prima. I servizi si riavviano da soli quando non tolgono niente a
    nessuno ( un `reload` ); il riavvio della macchina lo decide l'amministratore.
+   ⚠ **Due servizi dallo stesso binario non ripartono insieme.** Misurato il 18/11/2026 su
+   CloudPanel, aggiornando nginx: il postinst ha riavviato il nginx dei siti, ma il pannello ha il
+   suo ( `clp-nginx.service`, `-c /home/clp/services/nginx/nginx.conf` ) ed è rimasto sul binario
+   `(deleted)` del 3/11. Lo diceva solo l'ultima riga di `needrestart`. Dopo l'aggiornamento si
+   contano i master: `for p in $(pgrep nginx); do readlink /proc/$p/exe; done | grep -c deleted`
+   deve dare 0;
 
 ### Fuori dal gestore dei pacchetti, la paranoia raddoppia
 
