@@ -1223,7 +1223,12 @@ niente. Si prova con lo user-agent del bot, e `http://` separato da `https://`.
 **Una sorveglianza nuova si verifica come tutto il resto** ( punto 4 ). Appena installata, lì,
 auditd copriva gli ultimi tre minuti e la sentinella ripeteva un falso allarme ogni quindici: **un
 controllo nuovo si prova che registri davvero, e un allarme ripetuto si chiude entro la giornata**.
-È la differenza fra sorveglianza e teatro. Il confine del punto 8 resta: bloccare l'uscita e
+È la differenza fra sorveglianza e teatro. ⚠ Misurato il 18/11/2026: un falso allarme "eseguibile senza
+pacchetto" è andato avanti **27 giorni, 2.601 righe**, perché nessuno lo chiudeva e il rumore copriva
+tutto il resto. La causa era nello script, non nella macchina: in `sed -E 's|^/usr/(bin|lib)/|/\1/|'`
+il delimitatore `|` è anche l'alternanza, `sed` falliva in silenzio dentro `$( )` e la variabile restava
+vuota. **Una correzione di un controllo si prova in tutte e due le direzioni**: tace sul caso noto,
+e suona su un file finto messo apposta. Il confine del punto 8 resta: bloccare l'uscita e
 copiare le evidenze si fa da soli; spegnere un sito, togliere accessi e ruotare le credenziali degli
 altri lo decide l'amministratore, con i numeri in mano. E quello che non si può ricostruire perché
 non era registrato si dice ( punto 11 ).
