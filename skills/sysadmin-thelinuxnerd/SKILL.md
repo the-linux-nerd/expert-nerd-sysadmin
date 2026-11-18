@@ -829,6 +829,11 @@ avrebbe dato OK. Le trappole, tutte insieme:
    controllo. Un nome troppo generico ( `linux`, `python`, `google`... ) non si cerca, e un pacchetto
    che gli avvisi chiamano in un altro modo ( `apache2` diventa `httpd`, `openssh` diventa `sshd` ) va
    in `ALIAS`.
+   ⚠ Un **preannuncio** ( «Upcoming Critical PHP Security Release», 18/11/2026 ) non ha niente da
+   applicare, ma non è un avviso da archiviare: si registra come `accettata` scrivendo nella nota il
+   giorno e l'ora della release, e si apre una voce nel TODO per quell'ora. Lì i pacchetti in blacklist
+   ( quelli di CloudPanel ) vanno aggiornati a mano, e le versioni fuori supporto upstream ( php7.3 )
+   non avranno una release: o ELTS, o un backport in casa. Dopo la release la riga si riscrive.
 
 ⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
 chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
