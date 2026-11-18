@@ -774,6 +774,50 @@ Il controllo di chiusura legge solo l'esito ( `--esito` ), il giro vero lo fa il
 5. **Senza supporto**: il numero che dice quanto costa restare sulla release vecchia. Si riferisce
    all'amministratore insieme alla data di fine supporto, ed è l'argomento più forte per migrare.
 
+#### I pacchetti dei repository di terzi: il tracker non li vede, e mentono ( 18/11/2026 )
+
+Il 18/11/2026 the-linux-bot ha visto passare su oss-security una RCE di nginx via HTTP/2
+( CVE-2026-123633, CVE-2026-123007 ). Su cloudpanel03 nginx era vulnerabile ed esposto, ma `cve-server`
+avrebbe dato OK. Le trappole, tutte insieme:
+
+1. **Un pacchetto che non viene da Debian il tracker Debian non lo vede.** Il nginx di CloudPanel
+   ( `1.30.6-1+clp-trixie`, repository `d17k9fuiwb52nc.cloudfront.net` ), il PHP di ondrej o di CloudPanel,
+   MariaDB dal suo repository, gli agenti di Google: confrontati con la correzione Debian ( nginx 1.26.x )
+   risultano "più nuovi" e quindi sistemati. È un **falso OK**. L'origine vera si guarda con
+   `apt-cache policy <pacchetto>`. Dal 18/11 `cve-server` li toglie dal confronto, li elenca nella sezione
+   **0. Fuori dal tracker** e dà KO finché non c'è una riga `pkg:<sorgente>` in `valutazioni.tsv`, con
+   nella nota la fonte che si segue ( avvisi nginx.org, changelog CloudPanel, bollettini Google ).
+   Per quei pacchetti la fonte sono **gli avvisi del vendor e oss-security, il giorno stesso**.
+2. **Una revisione nuova non è una correzione.** Il candidato `1.30.6-2+clp-trixie` del 17/11 aveva
+   nel changelog solo "NGINX 1.30.6": stessa versione a monte, ancora vulnerabile. Prima di aggiornare
+   pensando di aver chiuso, si legge il changelog del candidato:
+   `cd $(mktemp -d) && apt-get download nginx && dpkg-deb --fsys-tarfile nginx_*.deb | tar -xO --wildcards './usr/share/doc/*/changelog.Debian.gz' | zcat | head`.
+3. **CloudPanel mette in blacklist di unattended-upgrades** nginx, php, mariadb e cloudpanel
+   ( `grep -A20 Package-Blacklist /etc/apt/apt.conf.d/*unattended*` ). Quei pacchetti **non si aggiornano
+   mai da soli**: la correzione, quando esce, la applica a mano chi segue l'avviso. "Gli aggiornamenti
+   automatici ci sono" su una macchina CloudPanel non copre il servizio più esposto.
+4. **Su CloudPanel i nginx sono due.** `clp-nginx` serve il pannello sulla 8443 con lo stesso binario e
+   ha la configurazione in `/home/clp/services/nginx/nginx.conf`. Una mitigazione fatta solo in
+   `/etc/nginx` lascia aperto il pannello. Si testa con `nginx -t -c /home/clp/services/nginx/nginx.conf`
+   e si ricarica con `systemctl reload clp-nginx`.
+5. **HTTP/2 si spegne in tutte e due le sintassi**: `http2 on;` ( nginx 1.25.1+ ) e il vecchio
+   `listen 443 ssl http2;`. Basta che ne resti una sola e il protocollo resta acceso su quella porta,
+   per tutti i vhost. Il conteggio da fare dopo è `nginx -T | grep -cE '^\s*(http2\s+on|listen\s[^;]*\bhttp2\b)'`,
+   che deve dare 0. La prova è una richiesta che lo chiede:
+   `curl -sk --http2 -o /dev/null -w '%{http_version}' --resolve sito:443:127.0.0.1 https://sito/`
+   deve rispondere `1.1`, sia sui siti sia sulla 8443.
+6. **Il pannello può riscrivere la mitigazione.** Salvare un vhost da CloudPanel lo rigenera dal template
+   ( `/home/clp/htdocs/app/files/resources/nginx/vhost_template/` ), che ha `http2 on`. Finché la
+   correzione non è installata, il conteggio del punto 5 si rifà a ogni giro.
+7. **Una RCE su un servizio esposto si mitiga il giorno stesso, senza chiedere.** Non si aspetta il
+   tracker, non si aspetta il pacchetto e non si presenta un menù all'amministratore. Si mitiga
+   ( con backup datato, test della configurazione e rollback ), si verifica dall'esterno, si registra
+   la riga `mitigata` in `valutazioni.tsv` e poi lo si riferisce. Resta all'amministratore solo
+   quello che la mitigazione non chiude, per esempio un aggiornamento che il vendor non ha ancora pubblicato.
+8. **La skill deve essere aggiornata dove serve.** cloudpanel03 era fermo al 12/11, senza `cve-server`,
+   perché l'hook gira solo all'apertura di una sessione: per questo c'è il cron `nerd-aggiorna`
+   ( vedi «Prima di cominciare» ).
+
 ⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
 chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
 pubblicata solo in ELTS. **Il repository ELTS di Freexian si scarica senza credenziali** ( `deb.freexian.com/extended-lts`,
