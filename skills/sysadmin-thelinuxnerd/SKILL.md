@@ -227,6 +227,15 @@ richiesta ciascuno, e nessun limite per IP l'avrebbe fermato. **La prima domanda
 distinti ha l'incidente?"**: se sono pochi serve un limite per IP, se sono decine di migliaia
 servono una regola sul percorso che costa ( lì era la paginazione profonda ) e la cache.
 
+**Chi conta più richieste non è chi costa di più: si parte dal database.** Misurato il 18/11/2026: con
+load 45 su 8 core, l'IP segnalato dall'allarme ( il primo per richieste ) era uno scanner di webshell
+che prendeva solo 404, e la sua raffica era già finita. Il carico erano **89 ricerche `?s=<nome
+azienda>` in un'ora** da decine di IP di un solo cloud, con user-agent da browser ( che il blocco
+per user-agent non vedeva ), ognuna una `LIKE '%…%'` da 10–100 s: nessuno di quegli IP stava nei
+primi quindici. La processlist ( query raggruppate, `TIME` ) dice il percorso, il percorso dice la
+rete; si blocca **il solo percorso costoso per quella rete** con un 429. Lì il load è sceso da 45 a 8
+in cinque minuti.
+
 **La memoria di un processo si misura col Pss, non con l'RSS.** Il 06/11/2026, per dimensionare
 `MaxRequestWorkers` di un apache prefork, l'RSS diceva 53 MB a processo e il Pss ( `smaps_rollup` ) 7 MB:
 il resto è memoria condivisa, contata una volta per processo. Con l'RSS il tetto sembrava 45 worker, col
