@@ -7,6 +7,8 @@
 # il 04/11/2026 web02 e web03 erano indietro di 7 commit, cloudpanel01 di 6, e la copia installata
 # di web02 non era nemmeno quella del suo clone. Quindi lo fa un hook di SessionStart, una volta
 # al giorno, e lo registra install.sh ( SKILL.md, «Prima di cominciare: la skill si aggiorna da sola» ).
+# Dal 18/11/2026 lo lancia anche cron/nerd-aggiorna due volte al giorno: l'hook gira solo se si apre
+# una sessione, e cloudpanel03, dove non se ne aprivano dal 12/11, era rimasto senza cve-server.py.
 #
 # UTILIZZO
 # nerd-aggiorna.sh [tutto] [CLONE]   controlla adesso e dice com'e' andata

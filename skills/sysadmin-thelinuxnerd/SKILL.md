@@ -26,6 +26,12 @@ un hook**, non la buona volontà:
 - `install.sh` registra `bin/nerd-aggiorna.sh` come hook di `SessionStart`. **Una volta al giorno**
   fa `fetch`; se origin è avanti e il clone è pulito, `pull --ff-only` e `install.sh`; se la copia
   installata non è quella del clone, rilancia `install.sh`. Senza niente da dire, tace;
+- ⚠ **e lo fa anche un cron, due volte al giorno** ( [`cron/nerd-aggiorna`](../../cron/nerd-aggiorna),
+  05:17 e 17:17, log in `/var/log/nerd-aggiorna.log` ), perché **l'hook gira solo se qualcuno apre
+  una sessione**. Il 18/11/2026 cloudpanel03, dove nessuno apriva Claude dal 12/11, era fermo quattro
+  giorni prima di `cve-server.py`: la regola delle CVE più volte al giorno non c'era, e intanto usciva
+  una RCE su nginx ( CVE-2026-123633/123007 ) con il suo nginx 1.30.6 esposto in HTTP/2. **La macchina
+  che nessuno apre è proprio quella che resta indietro senza che nessuno lo veda**;
 - ⚠ **se l'hook ha scritto qualcosa, si riferisce all'amministratore nella prima risposta**, in una
   riga coi titoli dei commit, anche se ha chiesto altro. Se la skill era già in contesto, **si
   rilegge questo file**: quella caricata è la versione vecchia;

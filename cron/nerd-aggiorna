@@ -1,0 +1,3 @@
+# La skill thelinuxnerd si aggiorna da sola dal repository due volte al giorno, anche se sulla macchina non si apre nessuna sessione Claude ( dal 18/11/2026 )
+# L'hook di SessionStart non bastava: cloudpanel03 e' rimasto fermo al 12/11 senza cve-server.py mentre usciva una RCE su nginx. Log in /var/log/nerd-aggiorna.log ( installato da install.sh della skill thelinuxnerd )
+17 5,17 * * * root ( date '+== \%F \%T'; nice -n 15 /bin/bash /root/.claude/bin/nerd-aggiorna.sh tutto /root/thelinuxnerd ) >> /var/log/nerd-aggiorna.log 2>&1
