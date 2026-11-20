@@ -285,6 +285,11 @@ conseguenza. Il ripristino è stato fermare l'invio nella config ( la coda resta
 2. **Test di sintassi prima di ricaricare**, sempre: `sshd -t`, `apachectl configtest`,
    `nginx -t`, `fail2ban-client -t`, `visudo -c`, `named-checkconf`. Una config rotta su un
    servizio di rete si paga con la macchina irraggiungibile.
+   ⚠ **Il test si giudica dal codice d'uscita, non dall'ultima riga.** Misurato il 20/11/2026: su
+   cinque `php-fpmX.Y -t` della stessa macchina due chiudevano con una riga vuota dopo il NOTICE
+   *test is successful*. Così `| tail -1 | grep -q successful` dava "fallito" su config buone, e lo
+   script si è fermato e ha ripristinato senza motivo. Si usa `cmd -t >/dev/null 2>&1; echo $?`,
+   e l'output si stampa solo per leggerlo.
    ⚠ **Una guardia che vieta qualcosa a root rompe i cron di root: si cercano tutti, non solo
    quelli di `cron.d`.** Il 16/11/2026 un `auto_prepend_file` che ferma il PHP CLI da root sotto
    `/var/www` è stato installato dopo aver guardato solo `/etc/cron.d` e la crontab: il notturno
