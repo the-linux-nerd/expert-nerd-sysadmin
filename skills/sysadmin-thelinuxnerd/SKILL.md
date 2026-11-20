@@ -834,6 +834,16 @@ avrebbe dato OK. Le trappole, tutte insieme:
    giorno e l'ora della release, e si apre una voce nel TODO per quell'ora. Lì i pacchetti in blacklist
    ( quelli di CloudPanel ) vanno aggiornati a mano, e le versioni fuori supporto upstream ( php7.3 )
    non avranno una release: o ELTS, o un backport in casa. Dopo la release la riga si riscrive.
+10. **«Si aggiorna a mano quando il vendor pubblica» non lo controlla nessuno, se non lo fa uno script.**
+   Il 18/11 la RCE di nginx su cloudpanel03 era mitigata, con la nota "aggiornare quando CloudPanel
+   pubblica". CloudPanel ha pubblicato la 1.30.7 il 19/11 alle 08:08, e ce ne si è accorti il 20/11
+   solo perché il generale ha chiesto un rapporto. Nel frattempo la 1.30.7 correggeva anche
+   CVE-2026-125283 ( try_files + alias ), che lo spegnimento di HTTP/2 non mitigava. Da allora
+   `cve-server.py` dà KO per ogni pacchetto di terzi con una revisione nuova nel repository e non
+   installata. Il KO si chiude in due modi: aggiornando, oppure con una riga `upd:<sorgente>:<versione>`
+   in `valutazioni.tsv`, se si decide di non aggiornare. Il changelog del candidato si legge dal .deb
+   ( `apt-get download` in una cartella temporanea, poi `dpkg-deb --fsys-tarfile`
+   e `usr/share/doc/*/changelog*` ), perché `apt-get changelog` sui repository di terzi non restituisce niente.
 
 ⚠ Misurato il 16/11/2026 su un Debian 10: 24186 CVE vulnerabili su 238 pacchetti, 21576 su kernel e
 chromium che nemmeno ELTS segue, **69 nel KEV**, fra cui apache2, git e brotli con la correzione
