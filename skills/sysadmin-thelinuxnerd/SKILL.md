@@ -994,6 +994,15 @@ fa spegnere un sito vivo.
 
 ## 5. Accorgersene: un allarme vale quello che arriva e che viene letto
 
+⚠ **Un controllo HTTP che sbaglia vhost dà un KO falso, e sembra un guasto del sito.** Misurato il
+23/11/2026: lo smoke con login era KO su tre siti, e gli account erano a posto. Lo script decideva https
+cercando `SSLEngine on` nel blocco `<VirtualHost>`, ma nei vhost di certbot quella riga sta in
+`options-ssl-apache.conf`, tirata dentro da `Include`. Così interrogava http, riceveva il 301 verso https,
+e `curl --location` dopo un redirect **non rimanda le credenziali Basic** ( serve `--location-trusted` ).
+Il vhost https si riconosce da `:443` nell'apertura, da `SSLCertificateFile` o da quell'`Include`. Con più
+vhost sulla stessa DocumentRoot si sceglie il ServerName del sito, non l'ultimo che dà il `glob`, che non
+è ordinato: uno con certificato snakeoil fallisce la verifica di curl e dà HTTP 000.
+
 Le difese servono poco se nessuno se ne accorge quando cedono. Tre modi visti in cui il
 monitoraggio c'era e non è servito:
 
