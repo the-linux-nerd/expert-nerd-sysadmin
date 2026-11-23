@@ -262,6 +262,13 @@ connessione. La prima ipotesi, le sessioni di lavoro aperte in quei minuti, era 
 mezzo: **l'ora si confronta al secondo**. Il blocco dei singoli IP chiude l'episodio, non la causa: lo
 scanner ruota indirizzi, e la domanda vera è il tetto condiviso.
 
+**Worker appesi: prima si guarda dove aspettano, poi si sospetta il database.** Misurato il 23/11/2026: un sito in timeout
+a 30 s col load a 0,17, e "MySQL server has gone away" 28.493 volte nel log, sembrava il database. `ss -tnp | grep apache2`
+diceva altro: 27 worker fermi in `poll` sulla 587 di un SMTP esterno. Una newsletter da 1.240 mail veniva smaltita
+**dentro le pagine**, 10 mail a richiesta, l'SMTP rifiutava ( `421 too many connections` ), la connessione al database
+scadeva nell'attesa ( wait_timeout di 3 s ) e la mail non veniva segnata: ogni visita riprovava. Il "gone away" era la
+conseguenza. Il ripristino è stato fermare l'invio nella config ( la coda resta intatta ), non toccare il database.
+
 ## 2. Prima di toccare una configurazione
 
 1. **Backup datato, con la data nel nome della cartella e non dopo l'estensione**:
