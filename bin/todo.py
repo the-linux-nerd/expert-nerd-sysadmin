@@ -11,11 +11,14 @@
 #
 # Convenzioni: vedi "I cinque file di un progetto" in _etc/_claude/_claude.framework.md.
 
+import datetime
 import argparse, os, re, signal, sys
 
 signal.signal( signal.SIGPIPE, signal.SIG_DFL )   # niente traceback con | head
 
 RE_SEZIONE = re.compile( r'^##+\s+(.*?)\s*$' )
+# scadenza nella riga della voce: ( scad: GG/MM/AAAA ) indicativa, ( scad!: GG/MM/AAAA ) tassativa
+RE_SCAD    = re.compile( r'\(\s*scad(!?)\s*:\s*(\d{1,2})/(\d{1,2})/(\d{4})\s*\)' )
 RE_VOCE    = re.compile( r'^- \[([ =?vx])\]\s*(?:\(([-!?])([-!?])([-!?])\))?\s*(.*)$' )
 
 def trova_file( esplicito ):
@@ -62,11 +65,37 @@ def leggi( percorso ):
                 'testo' : pulisci( m.group( 5 ) ),
                 'area'  : sezione,
                 'note'  : [],
+                'scad'  : scadenza( riga ),
             } )
         elif voci and ( riga.startswith( '--' ) or ( riga.startswith( '   ' ) and riga.strip() ) ):
             if voci[ -1 ][ 'riga' ] >= n - 60:
                 voci[ -1 ][ 'note' ].append( riga.rstrip() )
     return voci
+
+def scadenza( riga ):
+    """( data, tassativa ) della prima scadenza nella riga, o None"""
+    m = RE_SCAD.search( riga )
+    if not m:
+        return None
+    try:
+        return ( datetime.date( int( m.group( 4 ) ), int( m.group( 3 ) ), int( m.group( 2 ) ) ), m.group( 1 ) == '!' )
+    except ValueError:
+        return None
+
+def filtro_scadenza( spec, oggi = None ):
+    """spec: 'oggi', 'scadute' ( prima di oggi ), N ( da oggi a N giorni, scadute comprese ), 'tutte'"""
+    oggi = oggi or datetime.date.today()
+    if spec == 'tutte':   return lambda d: True
+    if spec == 'oggi':    return lambda d: d == oggi
+    if spec == 'scadute': return lambda d: d < oggi
+    n = int( spec )
+    return lambda d: d <= oggi + datetime.timedelta( days = n )
+
+def etichetta_scad( v ):
+    if not v.get( 'scad' ):
+        return ''
+    d, tass = v[ 'scad' ]
+    return ( '⏰!' if tass else '⏰ ' ) + d.strftime( '%d/%m' ) + ' '
 
 def peso( v ):
     f = v[ 'flag' ]
@@ -87,6 +116,8 @@ def main():
     p.add_argument( '-c', '--conta',     action = 'store_true', help = 'solo il conteggio per area' )
     p.add_argument( '-A', '--tutte',     action = 'store_true', help = 'tutti i marcatori, [v] e [x] compresi' )
     p.add_argument( '-w', '--larghezza', type = int, default = 96, help = 'colonne per il testo ( 0 = non troncare )' )
+    p.add_argument( '-S', '--scad',      help = 'solo voci con scadenza: oggi | scadute | N ( entro N giorni, scadute comprese ) | tutte' )
+    p.add_argument( '-T', '--tassative', action = 'store_true', help = 'solo scadenze tassative ( scad!: ); senza -S vale -S tutte' )
     p.add_argument( '--per-area',        action = 'store_true', help = 'raggruppa per area invece di ordinare per priorita' )
     a = p.parse_args()
 
@@ -109,6 +140,7 @@ def main():
     rflag = re.compile( '^' + ( '!..' if a.urgenti else a.flag ) + '$' ) if ( a.flag or a.urgenti ) else None
     rarea = re.compile( a.area, re.I ) if a.area else None
     rgrep = re.compile( a.grep, re.I ) if a.grep else None
+    rscad = filtro_scadenza( a.scad or 'tutte' ) if ( a.scad or a.tassative ) else None
 
     sel = []
     for v in voci:
@@ -116,6 +148,8 @@ def main():
         if rflag and not rflag.match( v[ 'flag' ] ):        continue
         if rarea and not rarea.search( v[ 'area' ] ):       continue
         if rgrep and not rgrep.search( v[ 'testo' ] + ' ' + ' '.join( v[ 'note' ] ) ): continue
+        if rscad and not ( v[ 'scad' ] and rscad( v[ 'scad' ][ 0 ] ) ): continue
+        if a.tassative and not ( v[ 'scad' ] and v[ 'scad' ][ 1 ] ):    continue
         sel.append( v )
 
     if a.conta:
@@ -128,15 +162,18 @@ def main():
         print( '%4d  TOTALE' % len( sel ) )
         return
 
-    sel.sort( key = ( lambda v: ( v[ 'area' ], peso( v ), v[ 'riga' ] ) ) if a.per_area
-              else   ( lambda v: ( peso( v ), v[ 'area' ], v[ 'riga' ] ) ) )
+    if rscad:
+        sel.sort( key = lambda v: ( v[ 'scad' ][ 0 ], not v[ 'scad' ][ 1 ], peso( v ), v[ 'riga' ] ) )
+    else:
+      sel.sort( key = ( lambda v: ( v[ 'area' ], peso( v ), v[ 'riga' ] ) ) if a.per_area
+                else   ( lambda v: ( peso( v ), v[ 'area' ], v[ 'riga' ] ) ) )
 
     area_corrente = None
     for v in sel:
         if a.per_area and v[ 'area' ] != area_corrente:
             area_corrente = v[ 'area' ]
             print( '\n## ' + area_corrente )
-        testo = v[ 'testo' ]
+        testo = etichetta_scad( v ) + v[ 'testo' ]
         if a.larghezza and len( testo ) > a.larghezza:
             testo = testo[ : a.larghezza - 1 ] + '…'
         if a.per_area:
