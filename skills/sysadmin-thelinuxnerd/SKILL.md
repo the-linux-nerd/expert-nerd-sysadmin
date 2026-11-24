@@ -1186,6 +1186,10 @@ script notturni con `wp` su quel sito stanno fallendo.
 
 **Un file nuovo e legittimo sotto sorveglianza si aggiunge alla baseline solo col suo percorso.** Un mu-plugin messo su tutta la flotta compare come *"percorso nuovo"* in ogni sito sorvegliato. Rigenerare la baseline intera lo zittisce, ma assolve insieme tutto quello che in quel momento è diverso. Si fa la copia della baseline, si accodano solo le righe `sha256sum` dei file appena messi e si controlla che il confronto non li segnali più.
 
+⚠ **I form dei temi vecchi possono fare da relay.** Un tema commerciale del 2012 ( bluediamond, AJAX `nopriv` `submit_contact_form` ) prendeva il destinatario da un campo nascosto `receiver` del POST e metteva nel `From` l'indirizzo scritto dal visitatore. Sintomo nel `mail.log`: rimbalzi `550 5.7.26 ... DMARC` da Gmail per domini altrui ( mail.ru, inbox.ru ) con envelope `wordpress@<sito>`, centinaia in un mese. Si cerca con `grep -rn "wp_mail(\|mail(" wp-content/themes` e si guarda da dove vengono destinatario e intestazioni. Si chiude con un mu-plugin che stacca il gestore del tema ( `remove_action` su `init` ) e ne mette uno col destinatario fisso e il visitatore nel `Reply-To`. Correggere il file del tema non basta: un aggiornamento lo riporta. La prova si fa a secco con `pre_wp_mail`, che ferma l'invio, per non mandare mail al cliente.
+
+⚠ **Da Google Cloud Spamhaus non si interroga via DNS.** Il resolver dei metadati e quelli pubblici ricevono `127.255.255.254` o `NXDOMAIN` anche per l'indirizzo di prova `127.0.0.2`: un "non listato" ottenuto così non vale niente. Lo stato si vede sul sito `check.spamhaus.org`. Il rifiuto `listing in Spamhaus SBL` su un IP GCP si legge dal record, perché spesso è un blocco sull'intervallo di Google e non sull'IP. UCEPROTECT-3 lista l'intero ASN e non si rincorre.
+
 ⚠ **Le chiavi SSH di root sono una superficie.** Su un solo host **57 chiavi autorizzate** ( 15 su un'altra, molte di macchine dismesse ), fra
 portatili e telefoni personali, senza un nome né una scadenza: una qualunque di quelle macchine
 persa è una porta aperta, ed è uno dei canali più plausibili della fuga di credenziali. Si
