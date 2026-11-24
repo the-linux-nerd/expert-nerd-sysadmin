@@ -59,7 +59,7 @@ Vale quando si salva **un sito solo** e la macchina resta accesa; per una macchi
   e se servono complete il dump si fa **sul server del database** con le sue credenziali di
   amministrazione ( `--defaults-file=/etc/mysql/debian.cnf` su Debian ). Si controlla `-- Dump
   completed` in coda, e che `CREATE TABLE` più `CREATE VIEW` tornino col conteggio di
-  `information_schema.tables`. Il file degli utenti a mano deve finire con `-- Grants completed`,
+  `information_schema.tables`. ⚠ Le viste si contano per **nome distinto** ( `grep -o "VIEW `[a-z0-9_]*` AS" | sort -u | wc -l` ): mysqldump scrive ogni vista due volte, prima come tabella segnaposto e poi con la definizione vera, e un `grep -c VIEW` dà il doppio più uno ( 251 contro 125, 24/11/2026 ). Un drop condizionato al conteggio si ferma, ed è giusto che lo faccia: si corregge il conteggio, non il controllo. Il file degli utenti a mano deve finire con `-- Grants completed`,
   sennò `verify` lo dà troncato;
 - **una vista rotta ferma il dump**: *View ... references invalid table(s) or column(s)* ( 1356 ), visto
   su un deploy il 05/11/2026. `--force` lo farebbe passare saltando la vista in silenzio: su un sito vivo
