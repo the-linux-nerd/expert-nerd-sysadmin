@@ -664,6 +664,14 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
 3. **le liste sono fresche e i repository rispondono**: `apt-get update` senza `Err:`, senza
    `404`, senza `Release file ... is not valid yet` o chiavi GPG scadute. Con le liste vecchie il
    conteggio del punto dopo è falso in tutte e due le direzioni;
+   ⚠ **un secondo meccanismo fatto a mano può fallire ogni giorno accanto a quello vero**: misurato il
+   26/11/2026 su un web server Debian 10, un `/etc/cron.daily/unattended-upgrades` scritto a mano nel 2024
+   ( `dpkg -S` non lo riconosce: **il nome di un pacchetto su un file non vuol dire che sia del pacchetto** )
+   lanciava `aptitude safe-upgrade --target-release $(lsb_release -cs)-security`. Su buster la suite di
+   sicurezza è `buster/updates` ( `a=oldoldstable` ), quindi `buster-security` non esiste: errore
+   `APT::Default-Release` ogni mattina per mesi, mentre il vero unattended-upgrades ( timer
+   `apt-daily-upgrade` ) aggiornava regolarmente. Si controlla che le origini del vero coprano
+   `Debian-Security`, si salva il doppione con `va.bak.sh` e lo si toglie;
 4. **gli aggiornamenti di sicurezza pendenti sono zero**: `apt-get -s dist-upgrade`, contando a
    parte le righe che vengono da `-security`. ⚠ **Un aggiornamento di sicurezza pendente da più di
    24 ore è un'anomalia**, e si riferisce **per prima**, prima di ogni altra cosa del giro: vuol
@@ -711,7 +719,9 @@ la prima passata le fa `triage.sh`, sezione AGGIORNAMENTI:
    repository Google ( `google-compute-engine`, l'agente della VM, che è un servizio ) non ci vanno:
    restano a mano. E se `apt-get update` dice *ha modificato il valore "Origin"* sul repository
    `google-cloud-packages-archive-keyring`, è un cambio di nome di Google: `apt-get update
-   --allow-releaseinfo-change` una volta. **Il conteggio lo fa `nerd-esclusi.sh`** ( blacklist, hold, terze parti ), che `install.sh`
+   --allow-releaseinfo-change` una volta. Se invece dice *Distribuzione in conflitto ( atteso X ma ottenuto
+   X-stable )*, quel comando non serve: il Release dichiara un altro `Codename`, e si scrive quello come suite
+   nel `.list` ( misurato il 26/11/2026: `...-keyring-buster` → `...-keyring-buster-stable`, avviso sparito ). **Il conteggio lo fa `nerd-esclusi.sh`** ( blacklist, hold, terze parti ), che `install.sh`
    registra come hook di `SessionStart`: se ci sono pendenti, **si dice al sistemista umano nella
    prima risposta della sessione** che vanno fatti a mano, quanti e da dove, anche se ha chiesto
    altro. Non si aggiornano da soli: la finestra la decide lui;
