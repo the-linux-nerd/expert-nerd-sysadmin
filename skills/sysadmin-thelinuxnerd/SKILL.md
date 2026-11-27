@@ -751,6 +751,7 @@ repository di terze parti ( PHP di Sury, MariaDB, Node ). Al primo giro su una m
 - **si fa l'inventario** di ciò che è installato fuori da `apt`, e per ciascuno **chi lo aggiorna
   e come**: va in `/root/READ.md`. Una riga *"nessuno"* è una risposta accettabile solo se è scritta
   e l'amministratore l'ha letta;
+- ⚠ **prima di ordinare il bump di una libreria per una CVE, si legge il `require.php` della versione corretta.** Misurato il 27/11/2026: per nove CVE di twig la correzione stava solo nella 3.31.1, che chiede php >=8.1, mentre il server aveva solo PHP 7.3 e la 2.x era fuori supporto. Con il bump si sarebbero rotti tutti i siti. In quel caso la strada è un backport o una mitigazione nel codice che usa la libreria, e il PHP del sistema diventa il vero debito di sicurezza. Prima si guarda anche dove sta la vendor-dir ( `config.vendor-dir` nel `composer.json` ): lì non era `vendor/`, e un `find vendor/<pacchetto>` non trovava niente su nessun sito;
 - per WordPress vale il punto 6: con `DISALLOW_FILE_MODS` gli aggiornamenti li fa lo script
   notturno, e **si verifica che giri** ( `wp core check-update`, `wp plugin list --update=available` ).
   ⚠ Misurato il 05/11/2026: l'updater scartava lo stderr di `wp` e leggeva l'output vuoto come
